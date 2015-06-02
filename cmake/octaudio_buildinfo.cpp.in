@@ -1,0 +1,2 @@
+const char* Oca_BUILD_TIMESTAMP = ${BUILD_TIMESTAMP};
+const char* Oca_BUILD_REVISION = ${BUILD_REVISION};

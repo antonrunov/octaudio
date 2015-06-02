@@ -1,0 +1,7 @@
+#include "duplex.xpm"
+#include "pause.xpm"
+#include "playback_off.xpm"
+#include "playback_on.xpm"
+#include "recording_off.xpm"
+#include "recording_on.xpm"
+#include "stop.xpm"
