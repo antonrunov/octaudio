@@ -27,7 +27,8 @@ DSP and audio processing.
 - Tracks can be marked as non-audible to be completely ignored during playback (useful
   for average values, control signals, etc.).
 
-For more information see [doc/octaudio_readme.txt](doc/octaudio_readme.txt).
+See more information and screenshots on [Octaudio wiki](https://github.com/antonrunov/octaudio/wiki).
+
 
 ##### Installing
 
