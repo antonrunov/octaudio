@@ -1885,8 +1885,11 @@ void OcaOctaveHost::initialize()
   oct_argv(1) = "-q";
   oct_argv(2) = "--line-editing";
   oct_argv(3) = "--no-history";
-  // TODO - quick fix for assert in lex.ll when nonstandard locale is used
+
   setlocale( LC_NUMERIC, "C" );
+  setlocale( LC_TIME, "C" );
+  octave_env::putenv( "LC_NUMERIC", "C" );
+  octave_env::putenv( "LC_TIME", "C" );
 
   INSTALL_OCA_BUILTIN( track_add );
   INSTALL_OCA_BUILTIN( track_remove );
