@@ -23,11 +23,10 @@
       sudo port install octave-signal
     Download and unpack  octaudio-0.0.6-macosx.tar.gz archive from Octaudio releases page.
 
-- Windows. Install official MinGW Octave build and packages from
-  http://sourceforge.net/projects/octave/files/Octave%20Windows%20binaries/Octave%203.6.4%20for%20Windows%20MinGW%20installer.
-  Download octaudio-0.0.6-mingw32.zip archive from Octaudio releases page, and unpack it
-  into Octave3.6.4_gcc4.6.2 directory inside the Octave installation. Then you can run
-  Octaudio with the octaudio.bat command file.
+- Windows. Install official MXE Octave build from https://ftp.gnu.org/gnu/octave/windows.
+  Download octaudio-0.0.6-mxe.zip archive from Octaudio releases page, and unpack it into
+  octave-4.0.0 directory inside the Octave installation. Then you can run Octaudio with
+  the octaudio.bat command file.
 
 - For other platforms and/or Octave versions you will need to compile Octaudio from
   source.

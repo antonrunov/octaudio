@@ -33,7 +33,7 @@ See more information and screenshots on [Octaudio wiki](https://github.com/anton
 ##### Installing
 
 First of all, Octaudio requires Octave to be installed. Pre-built binaries for Debian
-GNU/Linux, Windows (official MinGW Octave 3.6.4 build), and Mac OS X (macports Octave
+GNU/Linux, Windows (official MXE Octave 4.0 build), and Mac OS X (macports Octave
 installation) are available at the [releases](https://github.com/antonrunov/octaudio/releases) page.
 
 Installation instructions are in [doc/install.txt](doc/install.txt).

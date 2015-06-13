@@ -17,7 +17,7 @@
 
 cmake_minimum_required( VERSION 2.8 )
 project( octaudio )
-set( OCTAUDIO_VERSION "0.0.6" )
+set( OCTAUDIO_VERSION "0.0.6+" )
 
 # Octave
 find_program( OCTAVE_CONFIG_EXECUTABLE octave-config )
@@ -297,7 +297,10 @@ install( FILES "doc/octaudio_readme.txt" "doc/install.txt" "COPYING" DESTINATION
 
 if( WIN32 )
   install( PROGRAMS "setup/octaudio.bat" DESTINATION "." )
-  install( FILES "${QT_BINARY_DIR}/QtCored4.dll" "${QT_BINARY_DIR}/QtGuid4.dll" DESTINATION "bin" CONFIGURATIONS "Debug" )
-  install( FILES "${QT_BINARY_DIR}/QtCore4.dll" "${QT_BINARY_DIR}/QtGui4.dll" DESTINATION "bin" CONFIGURATIONS "Release" )
+  #install( FILES "${QT_BINARY_DIR}/QtCored4.dll" "${QT_BINARY_DIR}/QtGuid4.dll" DESTINATION "bin" CONFIGURATIONS "Debug" )
+  #install( FILES "${QT_BINARY_DIR}/QtCore4.dll" "${QT_BINARY_DIR}/QtGui4.dll" DESTINATION "bin" CONFIGURATIONS "Release" )
+  if( EXISTS "${QT_BINARY_DIR}/libsamplerate-0.dll" )
+    install( FILES "${QT_BINARY_DIR}/libsamplerate-0.dll" DESTINATION "bin" )
+  endif()
 endif()
 
