@@ -282,8 +282,10 @@ double OcaTrackGroup::writeRecordingData( double t, double t_max, OcaRingBuffer*
   if( ( NULL == track1 ) && ( NULL == track2 ) ) {
     if( first ) {
       track1 = new OcaTrack( NULL, getDefaultSampleRate() );
+      track1->setStereoPan( -1.0 );
       addTrack( track1 );
       track2 = new OcaTrack( NULL, getDefaultSampleRate() );
+      track2->setStereoPan( 1.0 );
       addTrack( track2 );
       {
         WLock lock( this );
