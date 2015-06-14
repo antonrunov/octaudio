@@ -920,6 +920,15 @@ void OcaTrackGroupView::keyPressEvent ( QKeyEvent* key_event )
       }
       break;
 
+    case Qt::Key_Home:
+      showGroupStart();
+      m_group->setCursorPosition( m_group->getStartTime() );
+      break;
+
+    case Qt::Key_End:
+      showGroupEnd();
+      m_group->setCursorPosition( m_group->getEndTime() );
+      break;
 
     default:
       processed = false;
