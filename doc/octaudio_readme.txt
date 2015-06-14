@@ -617,6 +617,8 @@ automatically when the object is deleted.
 - Data View
     Ctrl+U, Ctrl+D                    - move track up / down
     Up, Down                          - next / previous track
+    Home                              - set cursor and view to the group start
+    End                               - set cursor and view to the group end
     Ctrl+Up, Ctrl+Down                - change time scale
     Left, Right                       - move cursor
     Ctrl+Left, Ctrl+Right             - move cursor (fine)

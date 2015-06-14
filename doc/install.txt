@@ -19,6 +19,7 @@
     Install macports according to the instructions at https://www.macports.org/install.php.
     Install the following macports packages:
       sudo port install qt4-mac
+      sudo port install portaudio
       sudo port install octave
       sudo port install octave-signal
     Download and unpack  octaudio-0.0.6-macosx.tar.gz archive from Octaudio releases page.
