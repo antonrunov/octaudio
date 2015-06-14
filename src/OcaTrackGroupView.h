@@ -118,9 +118,17 @@ class OcaTrackGroupView : public QAbstractScrollArea
     OcaObjectListener*                    m_listener;
 
   protected:
+    enum EAudioPositionState {
+      e_AudioPositionNone       = 0,
+      e_AudioPositionPlayback,
+      e_AudioPositionRecording,
+    };
+
+  protected:
     OcaTimeRuller*              m_timeRuller;
     double                      m_timeScale;
     double                      m_audioPosition;
+    int                         m_audioPositionState;
     double                      m_basePosition;
     bool                        m_basePosAuto;
     double                      m_autoBaseLeft;

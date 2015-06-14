@@ -137,8 +137,7 @@ void OcaTrackGroupView::moveCursor( double dt )
 
 void OcaTrackGroupView::moveCursorAndView( double dt )
 {
-  if( fabs( ( m_group->getCursorPosition() - m_group->getViewPosition() )
-                                        / m_group->getViewDuration() * 2 - 1 ) > 0.75 ) {
+  if( ! checkPosition( m_group->getCursorPosition(), 0.125, 0.125 ) ) {
     setCursorOnCenter();
   }
   moveCursor( dt );
@@ -449,24 +448,25 @@ void OcaTrackGroupView::setTrackSolo()
 void OcaTrackGroupView::updateAudioPosition()
 {
   OcaAudioController*  controller = OcaApp::getAudioController();
-  if( controller->getPlayedGroup() != m_group ) {
-    return;
+  bool visible = checkPosition( m_audioPosition, 0.0, 0.0 );
+
+  if( ( e_AudioPositionRecording == m_audioPositionState ) &&
+      ( controller->getStateRecording() == OcaAudioController::e_StatePlaying ) ) {
+    m_audioPosition = controller->getRecordingPosition();
   }
-  if( ( controller->getState() == OcaAudioController::e_StatePlaying )
-     || ( controller->getState() == OcaAudioController::e_StatePaused ) ) {
-    // temporary workaround (rendering optimization required)
-    //if( 0.2 < controller->getCursor() - m_audioPosition ) {
-      bool visible = ( fabs( ( m_audioPosition - m_group->getViewPosition() )
-                                          / m_group->getViewDuration() * 2 - 1 ) <= 1.0 );
-      m_audioPosition = controller->getPlaybackPosition();
-      if( m_basePosAuto && visible ) {
-        if( ( m_audioPosition - m_group->getViewPosition() )
-                                                    / m_group->getViewDuration() > 0.875 ) {
-          m_group->setViewPosition( m_audioPosition - 0.125 * m_group->getViewDuration() );
-        }
-        setBasePosition( m_audioPosition, true );
-      }
-    // }
+  else if( ( e_AudioPositionPlayback == m_audioPositionState ) &&
+      ( controller->getState() == OcaAudioController::e_StatePlaying ) ) {
+    m_audioPosition = controller->getPlaybackPosition();
+  }
+  else {
+    visible = false;
+  }
+
+  if( m_basePosAuto && visible ) {
+    if( ! checkPosition( m_audioPosition, 0.0, 0.125 ) ) {
+      m_group->setViewPosition( m_audioPosition - 0.125 * m_group->getViewDuration() );
+    }
+    setBasePosition( m_audioPosition, true );
   }
 }
 
@@ -640,27 +640,29 @@ void OcaTrackGroupView::onUpdateRequired(   uint flags,
   uint audio_flags = m_listener->getFlags( controller );
   if( OcaAudioController::e_FlagStateChanged & audio_flags ) {
     bool autopos = false;
-    if( controller->getPlayedGroup() == m_group ) {
+    if( controller->getRecordingGroup() == m_group ) {
       m_listener->setObjectMask( controller, OcaAudioController::e_FlagALL );
       //autopos = ! isfinite( m_audioPosition );
       autopos = true; // TODO
-      m_audioPosition = controller->getPlaybackPosition();
-    }
-    else if( controller->getRecordingGroup() == m_group ) {
-      m_listener->setObjectMask( controller, OcaAudioController::e_FlagALL );
-      //autopos = ! isfinite( m_audioPosition );
-      autopos = true; // TODO
+      m_audioPositionState = e_AudioPositionRecording;
       m_audioPosition = controller->getRecordingPosition();
+    }
+    else if( controller->getPlayedGroup() == m_group ) {
+      m_listener->setObjectMask( controller, OcaAudioController::e_FlagALL );
+      //autopos = ! isfinite( m_audioPosition );
+      autopos = true; // TODO
+      m_audioPositionState = e_AudioPositionPlayback;
+      m_audioPosition = controller->getPlaybackPosition();
     }
     else {
       m_listener->setObjectMask( controller, OcaAudioController::e_FlagStateChanged );
       auto_pos_after_audio = true;
+      m_audioPositionState = e_AudioPositionNone;
       m_audioPosition = NAN;
     }
 
     if( autopos && isfinite( m_audioPosition ) ) {
-      if( fabs( ( m_audioPosition - m_group->getViewPosition() )
-                                      / m_group->getViewDuration() * 2 - 1 ) <= 1 ) {
+      if( checkPosition( m_audioPosition, 0.0, 0.0 ) ) {
         setBasePosition( m_audioPosition, true );
       }
       else {
