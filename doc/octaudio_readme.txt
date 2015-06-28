@@ -389,7 +389,7 @@ automatically when the object is deleted.
   ret = oca_track_setprop( name, val, [idn], [group_id] )
   ret = oca_track_setprop( props, [idn], [group_id] )
       Handle track properties. The following properties are defined for all tracks:
-      - "start" (read only), start time of track data, in seconds
+      - "start", start time of track data, in seconds
       - "end" (read only), end time of track data, in seconds
       - "duration" (read only), it is just equal to end - start
       - "scale", vertical scale

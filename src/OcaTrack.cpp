@@ -180,6 +180,29 @@ void OcaTrack::setStereoPan( double pan )
 
 // ------------------------------------------------------------------------------------
 
+bool OcaTrack::setStartTime( double t )
+{
+  uint flags = 0;
+  {
+    WLock lock( this );
+    double dt = t - m_startTime;
+    if( 0 != dt ) {
+      QMap<double,OcaTrackDataBlock*> new_blocks;
+      QMap<double,OcaTrackDataBlock*>::const_iterator it= m_blocks.begin();
+      for( ; it != m_blocks.end(); it++ ) {
+        new_blocks.insert( it.key() + dt, it.value() );
+      }
+      m_blocks = new_blocks;
+      m_startTime += dt;
+      flags = e_FlagTrackDataChanged | e_FlagDurationChanged;
+    }
+  }
+
+  return emitChanged( flags );
+}
+
+// ------------------------------------------------------------------------------------
+
 bool OcaTrack::setSampleRate( double rate )
 {
   if( ( rate == m_sampleRate ) || ( 0 >= rate ) ) {
@@ -206,7 +229,7 @@ bool OcaTrack::setSampleRate( double rate )
     }
     m_sampleRate = rate;
   }
-  return emitChanged( e_FlagSampleRateChanged | e_FlagTrackDataChanged );
+  return emitChanged( e_FlagSampleRateChanged | e_FlagTrackDataChanged | e_FlagDurationChanged );
 }
 
 // ------------------------------------------------------------------------------------

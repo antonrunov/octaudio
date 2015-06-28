@@ -44,6 +44,7 @@ class OcaTrack : public OcaTrackBase
   Q_PROPERTY( bool audible READ isAudible WRITE setAudible );
   Q_PROPERTY( double gain READ getGain WRITE setGain );
   Q_PROPERTY( double stereo_pan READ getStereoPan WRITE setStereoPan );
+  Q_PROPERTY( double start READ getStartTime WRITE setStartTime );
   //Q_PROPERTY( bool stereo );
 
   public:
@@ -67,6 +68,8 @@ class OcaTrack : public OcaTrackBase
     virtual double getStartTime() const { return m_startTime; }
     virtual double getEndTime() const { return m_startTime + m_duration; }
     virtual double getDuration() const { return m_duration; }
+
+    bool setStartTime( double t );
 
     void getDataBlocksInfo( OcaBlockListInfo* info, double t0, double duration ) const;
 
