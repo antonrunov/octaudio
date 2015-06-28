@@ -348,11 +348,21 @@ automatically when the object is deleted.
   ret = oca_data_clear( [idn], [group_id] )
       Remove all data from the specified track or tracks.
 
+  oca_data_delete( [t_spec], [id], [group_id] )
+  [blocks, starts] = oca_data_delete( [t_spec], [id], [group_id] )
+      Delete data within the specified interval 't_spec'. Returns deleted data blocks
+      as a cell array of numeric arrays. The second returned value 'starts' is an array
+      of start positions of the data blocks;
+
   list = oca_data_listblocks( [t_spec], [id], [group_id] )
       List data blocks  within the specified interval 't_spec'.
       Returns 2 x N matrix. Each column is a vector of the form [time; duration], thus
       list(1,:) gives the starting times of the blocks, and list(2,:) gives the
       durations.
+
+  [blocks, starts] = oca_data_getblocks( [t_spec], [id], [group_id] )
+      Get all data blocks within the specified interval 't_spec'. Returned values are the
+      same as for 'oca_data_delete' function.
 
 
 - Track commands. For track operations, the operand id should be a track or a smart

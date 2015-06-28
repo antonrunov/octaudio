@@ -495,7 +495,7 @@ void OcaTrack::cutData( OcaBlockListData* dst, double t0, double duration )
         }
         bool done = false;
         if( block->getLength() > r.end ) {
-          OcaTrackDataBlock* tmp = NULL;
+          OcaTrackDataBlock* tmp = new OcaTrackDataBlock;
           if( ! block->split( r.end, tmp ) ) {
             Q_ASSERT( false );
           }

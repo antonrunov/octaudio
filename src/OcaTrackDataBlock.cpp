@@ -207,13 +207,13 @@ long OcaTrackDataBlock::write( const OcaDataVector* src, long ofs )
     block_idx++;
   }
   m_length = qMax( m_length, ofs + result );
-  writeAvgChunks( avg_ofs, &avg, 0 );
+  writeAvgChunks( avg_ofs, &avg, 0, false );
   return result;
 }
 
 // ------------------------------------------------------------------------------------
 
-void OcaTrackDataBlock::writeAvgChunks( long ofs, const OcaAvgVector* avg, int order )
+void OcaTrackDataBlock::writeAvgChunks( long ofs, const OcaAvgVector* avg, int order, bool truncate )
 {
   QList<OcaAvgVector>& dst = m_avgChunks[ order ];
   int block_idx = ofs / s_CHUNK_SIZE;
@@ -235,6 +235,7 @@ void OcaTrackDataBlock::writeAvgChunks( long ofs, const OcaAvgVector* avg, int o
 
   order++;
   const OcaAvgData* v = avg->data();
+  int last_size = 0;
   while( 0 < len ) {
     OcaAvgVector* dst_v = &dst[block_idx];
     int l = qMin( len, s_CHUNK_SIZE - idx0 );
@@ -242,6 +243,7 @@ void OcaTrackDataBlock::writeAvgChunks( long ofs, const OcaAvgVector* avg, int o
     if( dst_v->size() < idx0 + l ) {
       dst_v->resize( idx0 + l );
     }
+    last_size = idx0 + l;
     memcpy( dst_v->data() + idx0, v, l * sizeof(OcaAvgData) );
     if( order < s_AVG_MAX_DEPTH ) {
       avg_idx += calcAvg2( avg2.data() + avg_idx, dst_v, idx0, l );
@@ -253,8 +255,19 @@ void OcaTrackDataBlock::writeAvgChunks( long ofs, const OcaAvgVector* avg, int o
     block_idx++;
     idx0 = 0;
   }
+
+
+  if( truncate ) {
+    while( dst.size() > block_idx_end + 1 ) {
+      dst.removeLast();
+    }
+    if( 0 < last_size ) {
+      dst[block_idx_end].resize( last_size );
+    }
+  }
+
   if( order < s_AVG_MAX_DEPTH ) {
-    writeAvgChunks( avg_ofs, &avg2, order );
+    writeAvgChunks( avg_ofs, &avg2, order, truncate );
   }
 }
 
@@ -349,6 +362,16 @@ bool OcaTrackDataBlock::split( long ofs, OcaTrackDataBlock* rem )
     }
   }
   m_chunks = chunks_new;
+  block_idx = m_chunks.size() - 1;
+  OcaDataVector* v = &m_chunks[ block_idx ];
+  Q_ASSERT( block_idx * s_CHUNK_SIZE + v->size() == ofs );
+  m_length = ofs;
+
+  int avg_ofs = ofs / s_AVG_FACTOR;
+  int i0 = m_length - block_idx * s_CHUNK_SIZE;
+  OcaAvgVector avg( 1 );
+  calcAvg( avg.data(), v, i0-1, 1 );
+  writeAvgChunks( avg_ofs, &avg, 0, true );
 
   return true;
 }

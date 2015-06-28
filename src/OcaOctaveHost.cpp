@@ -1220,8 +1220,71 @@ OCA_BUILTIN(  data_listblocks,
 
 // ----------------------------------------------------------------------------
 
-  //[data, t0] = oca_data_cut( [t_spec], [id], [group_id] )
-  //blocks = oca_data_getblocks( [t_spec], [id] )
+static octave_value_list process_data_blocks( const octave_value_list& args, int nargout, bool cut )
+{
+  octave_value_list result;
+  OcaTrackGroup* group = NULL;
+  OcaTrack* track = id_to_datatrack( args, 1, 2, &group );
+  if( NULL == track ) {
+    error( "invalid track" );
+  }
+  else {
+    Q_ASSERT( NULL != group );
+    octave_value t_spec_val = safe_arg( args, 0 );
+    NDArray t_spec = get_time_spec( t_spec_val, track, group );
+    if( 2 == t_spec.length() ) {
+      OcaBlockListData data;
+      if( cut ) {
+        if( 0 < nargout ) {
+          track->cutData( &data, t_spec(0), t_spec(1) );
+        }
+        else {
+          track->deleteData( t_spec(0), t_spec(1) );
+        }
+      }
+      else {
+        track->getData( &data, t_spec(0), t_spec(1) );
+      }
+
+      if( ( 0 < nargout ) || ( ! cut ) ) {
+        Cell c( 1, data.getSize() );
+        NDArray starts( dim_vector( 1, data.getSize() ) );
+        for( int i = 0; i < data.getSize(); i++ ) {
+          const OcaDataVector* block = data.getBlock( i );
+          if( 0 < block->size() ) {
+            NDArray ar( dim_vector( block->size(), 1 ) );
+            memcpy( ar.fortran_vec(), block->constData(), block->size() * sizeof(double) );
+            starts(i) = data.getTime( i );
+            c(i) = ar;
+          }
+        }
+        result(0) = c;
+        result(1) = starts;
+      }
+    }
+  }
+  return result;
+}
+
+// ----------------------------------------------------------------------------
+
+OCA_BUILTIN(  data_getblocks,
+              "[blocks, starts] = oca_data_getblocks( [t_spec], [id], [group_id] )"   )
+{
+  return process_data_blocks( args, nargout, false );
+}
+
+// ----------------------------------------------------------------------------
+
+OCA_BUILTIN(  data_delete,
+              "oca_data_delete( [t_spec], [id], [group_id] )\n"
+              "[blocks, starts] = oca_data_delete( [t_spec], [id], [group_id] )"   )
+{
+  return process_data_blocks( args, nargout, true );
+}
+
+// ----------------------------------------------------------------------------
+
   //t_split = oca_data_split( t, [id] );
   //ret = oca_data_join( [t_spec], [id] );
 
@@ -1904,6 +1967,8 @@ void OcaOctaveHost::initialize()
   INSTALL_OCA_BUILTIN( data_set );
   INSTALL_OCA_BUILTIN( data_clear );
   INSTALL_OCA_BUILTIN( data_listblocks );
+  INSTALL_OCA_BUILTIN( data_getblocks );
+  INSTALL_OCA_BUILTIN( data_delete );
 
   INSTALL_OCA_BUILTIN( group_add );
   INSTALL_OCA_BUILTIN( group_remove );

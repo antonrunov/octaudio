@@ -48,7 +48,7 @@ class OcaTrackDataBlock
   protected:
     int calcAvg( OcaAvgData* dst, const OcaDataVector* v, int ofs, int len );
     int calcAvg2( OcaAvgData* dst, const OcaAvgVector* v, int ofs, int len );
-    void writeAvgChunks( long ofs, const OcaAvgVector* avg, int order );
+    void writeAvgChunks( long ofs, const OcaAvgVector* avg, int order, bool truncate );
 
   protected:
     long                              m_length;
