@@ -17,7 +17,7 @@
 
 cmake_minimum_required( VERSION 2.8 )
 project( octaudio )
-set( OCTAUDIO_VERSION "0.0.6.1" )
+set( OCTAUDIO_VERSION "0.0.6.1*" )
 
 # Octave
 find_program( OCTAVE_CONFIG_EXECUTABLE octave-config )
