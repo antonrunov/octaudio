@@ -55,6 +55,5 @@ list of the main issues.
   length data, but current implementation of data blocks uses memory storage. This
   limitation will be removed in next releases.
 - Missing undo/redo functions.
-- Missing data block operations. Split, join, move, cut functions are not implemented yet.
 - UI functionality is insufficient sometimes, especially for monitors and multiple track
   selection.
