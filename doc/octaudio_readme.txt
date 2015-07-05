@@ -364,6 +364,15 @@ automatically when the object is deleted.
       Get all data blocks within the specified interval 't_spec'. Returned values are the
       same as for 'oca_data_delete' function.
 
+  t_split = oca_data_split( ["cursor"], [id], [group_id] )
+  t_split = oca_data_split( t, [id], [group_id] )
+      Split data block at the time t or the cursor position. Returns start time of the
+      new block, or nan if there is no data block at the specified time.
+
+  ret = oca_data_join( [t_spec], [id], [group_id] )
+      Join all data blocks within the specified interval into single block. Returns the
+      number of joined blocks.
+
 
 - Track commands. For track operations, the operand id should be a track or a smart
   track, and container is a group.

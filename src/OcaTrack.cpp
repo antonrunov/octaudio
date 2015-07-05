@@ -526,6 +526,80 @@ void OcaTrack::cutData( OcaBlockListData* dst, double t0, double duration )
 
 // ------------------------------------------------------------------------------------
 
+double OcaTrack::splitBlock( double t0 )
+{
+  double t_ret = NAN;
+  uint flags = 0;
+  {
+    WLock lock( this );
+    QMap<double,OcaTrackDataBlock*>::const_iterator it0 = findBlock( t0, false );
+    if( it0 != m_blocks.end() ) {
+      QMap<double,OcaTrackDataBlock*>::iterator it = m_blocks.find( it0.key() );
+      OcaTrackDataBlock* block = it.value();
+      double start_time = it.key();
+      Range r = getRange( block, t0 - start_time, 0 );
+      if( r.isValid() ) {
+        if( 0 == r.start ) {
+          t_ret = start_time;
+        }
+        else {
+          OcaTrackDataBlock* tmp = new OcaTrackDataBlock;
+          if( ! block->split( r.start, tmp ) ) {
+            Q_ASSERT( false );
+          }
+          t_ret = start_time + r.start / m_sampleRate;
+          m_blocks.insert( t_ret, tmp );
+          flags = e_FlagTrackDataChanged;
+        }
+      }
+    }
+  }
+
+  emitChanged( flags );
+  return t_ret;
+}
+
+// ------------------------------------------------------------------------------------
+
+int OcaTrack::joinBlocks( double t0, double duration ) {
+  int ret = 0;
+  uint flags = 0;
+  {
+    WLock lock( this );
+    QMap<double,OcaTrackDataBlock*>::const_iterator it0 = findBlock( t0, false );
+    if( it0 != m_blocks.end() ) {
+      QMap<double,OcaTrackDataBlock*>::iterator it = m_blocks.find( it0.key() );
+      ret = 1;
+      OcaTrackDataBlock* block = it.value();
+      it++;
+      double t_end = t0 + duration + Oca_TIME_TOLERANCE;
+      while( it != m_blocks.end() ) {
+        OcaTrackDataBlock* tmp = it.value();
+        double start_time = it.key();
+        Range r = getRange( tmp, t0 - start_time, duration );
+        if( ( ! r.isValid() ) ) {
+          break;
+        }
+        it = m_blocks.erase( it );
+        block->append( tmp );
+        delete tmp;
+        tmp = NULL;
+        flags = e_FlagTrackDataChanged;
+        ret++;
+      }
+    }
+
+    if( 0 != flags ) {
+      flags |= updateDuration();
+    }
+  }
+
+  emitChanged( flags );
+  return ret;
+}
+
+// ------------------------------------------------------------------------------------
+
 QMap<double,OcaTrackDataBlock*>::const_iterator OcaTrack::findBlock( double t0,
                                                                             bool bottom_allowed  ) const
 {

@@ -380,7 +380,17 @@ bool OcaTrackDataBlock::split( long ofs, OcaTrackDataBlock* rem )
 
 long OcaTrackDataBlock::append( const OcaTrackDataBlock* block )
 {
-  return 0;
+  const long BS = s_CHUNK_SIZE * 128;
+  OcaDataVector buffer;
+
+  long len = block->getLength();
+  while( 0 < len ) {
+    long n = block->read( &buffer, 0, qMin( len, BS ) );
+    len -= n;
+    write( &buffer, m_length );
+  }
+  Q_ASSERT( 0 == len );
+  return m_length;
 }
 
 // ------------------------------------------------------------------------------------

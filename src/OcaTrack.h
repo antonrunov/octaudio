@@ -79,6 +79,8 @@ class OcaTrack : public OcaTrackBase
     double setData( const OcaDataVector* src, double t0 );
     void deleteData( double t0, double duration );
     void cutData( OcaBlockListData* dst, double t0, double duration );
+    double splitBlock( double t0 );
+    int    joinBlocks( double t0, double duration );
 
     bool validateBlocks() const;
 

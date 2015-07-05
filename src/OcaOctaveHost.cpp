@@ -837,6 +837,9 @@ static NDArray get_time_spec( octave_value t_spec_val, OcaTrack* track, OcaTrack
       result = t_spec;
     }
   }
+  else {
+    error( "invalid t_spec" );
+  }
 
   if( -1 != type ) {
     result = NDArray( dim_vector( 1, 2 ) );
@@ -1285,9 +1288,70 @@ OCA_BUILTIN(  data_delete,
 
 // ----------------------------------------------------------------------------
 
-  //t_split = oca_data_split( t, [id] );
-  //ret = oca_data_join( [t_spec], [id] );
+OCA_BUILTIN(  data_split,
+              "t_split = oca_data_split( [\"cursor\"], [id], [group_id] )\n"
+              "t_split = oca_data_split( t, [id], [group_id] )"               )
+{
+  OcaTrackGroup* group = NULL;
+  double t = NAN;
+  OcaTrack* track = id_to_datatrack( args, 1, 2, &group );
+  if( NULL == track ) {
+    error( "invalid track" );
+  }
+  else {
+    octave_value t_spec_val = safe_arg( args, 0 );
+    bool use_cursor = ( ! t_spec_val.is_defined() );
+    if( t_spec_val.is_real_scalar() ) {
+      t = t_spec_val.double_value();
+    }
+    else if( t_spec_val.is_string() ) {
+      if( "cursor" == t_spec_val.string_value() ) {
+        use_cursor = true;
+      }
+    }
+    if( use_cursor ) {
+      t = group->getCursorPosition() + 0.5 / track->getSampleRate();
+    }
+    if( ! std::isfinite(t) ) {
+      error( "invalid time point" );
+    }
+    else {
+      t = track->splitBlock( t );
+    }
+  }
+  return octave_value( t );
+}
 
+// ----------------------------------------------------------------------------
+
+OCA_BUILTIN(  data_join,
+              "ret = oca_data_join( [t_spec], [id], [group_id] )"   )
+{
+  OcaTrackGroup* group = NULL;
+  OcaTrack* track = id_to_datatrack( args, 1, 2, &group );
+  int result = 0;
+  if( NULL == track ) {
+    error( "invalid track" );
+  }
+  else {
+    Q_ASSERT( NULL != group );
+    octave_value t_spec_val = safe_arg( args, 0 );
+    if( ! t_spec_val.is_defined() ) {
+      t_spec_val = "region";
+    }
+    NDArray t_spec = get_time_spec( t_spec_val, track, group );
+    if( 2 == t_spec.length() ) {
+      if( 0 == t_spec(1) ) {
+        error( "zero duration specified" );
+      }
+      else {
+        result = track->joinBlocks(  t_spec(0), t_spec(1) );
+      }
+    }
+  }
+
+  return octave_value( result );
+}
 
 // ----------------------------------------------------------------------------
 // group
@@ -1969,6 +2033,8 @@ void OcaOctaveHost::initialize()
   INSTALL_OCA_BUILTIN( data_listblocks );
   INSTALL_OCA_BUILTIN( data_getblocks );
   INSTALL_OCA_BUILTIN( data_delete );
+  INSTALL_OCA_BUILTIN( data_split );
+  INSTALL_OCA_BUILTIN( data_join );
 
   INSTALL_OCA_BUILTIN( group_add );
   INSTALL_OCA_BUILTIN( group_remove );
