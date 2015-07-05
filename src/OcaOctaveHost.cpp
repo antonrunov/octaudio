@@ -796,7 +796,7 @@ static NDArray get_time_spec( octave_value t_spec_val, OcaTrack* track, OcaTrack
   if( ! t_spec_val.is_defined() ) {
     type = 0;
   }
-  if( t_spec_val.is_string() ) {
+  else if( t_spec_val.is_string() ) {
     const std::string s = t_spec_val.string_value();
     if( s.empty() ) {
       type = 0;
@@ -1351,6 +1351,33 @@ OCA_BUILTIN(  data_join,
   }
 
   return octave_value( result );
+}
+
+// ----------------------------------------------------------------------------
+
+OCA_BUILTIN(  data_moveblocks,
+              "dt = oca_data_moveblocks( dt, [t_spec], [id], [group_id] )"   )
+{
+  OcaTrackGroup* group = NULL;
+  OcaTrack* track = id_to_datatrack( args, 2, 3, &group );
+  double dt = NAN;
+  octave_value dt_val = safe_arg( args, 0 );
+  if( NULL == track ) {
+    error( "invalid track" );
+  }
+  else if( ! dt_val.is_real_scalar() ) {
+    error( "invalid dt" );
+  }
+  else {
+    Q_ASSERT( NULL != group );
+    octave_value t_spec_val = safe_arg( args, 1 );
+    NDArray t_spec = get_time_spec( t_spec_val, track, group );
+    if( 2 == t_spec.length() ) {
+      dt = track->moveBlocks( dt_val.double_value(), t_spec(0), t_spec(1) );
+    }
+  }
+
+  return octave_value( dt );
 }
 
 // ----------------------------------------------------------------------------
@@ -2035,6 +2062,7 @@ void OcaOctaveHost::initialize()
   INSTALL_OCA_BUILTIN( data_delete );
   INSTALL_OCA_BUILTIN( data_split );
   INSTALL_OCA_BUILTIN( data_join );
+  INSTALL_OCA_BUILTIN( data_moveblocks );
 
   INSTALL_OCA_BUILTIN( group_add );
   INSTALL_OCA_BUILTIN( group_remove );

@@ -364,6 +364,10 @@ automatically when the object is deleted.
       Get all data blocks within the specified interval 't_spec'. Returned values are the
       same as for 'oca_data_delete' function.
 
+  dt = oca_data_moveblocks( dt, [t_spec], [id], [group_id] )
+      Shift the data blocks on 'dt' or up to the next block. Returns the actual shift
+      value.
+
   t_split = oca_data_split( ["cursor"], [id], [group_id] )
   t_split = oca_data_split( t, [id], [group_id] )
       Split data block at the time t or the cursor position. Returns start time of the

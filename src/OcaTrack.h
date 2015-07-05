@@ -81,6 +81,7 @@ class OcaTrack : public OcaTrackBase
     void cutData( OcaBlockListData* dst, double t0, double duration );
     double splitBlock( double t0 );
     int    joinBlocks( double t0, double duration );
+    double moveBlocks( double dt, double t0, double duration );
 
     bool validateBlocks() const;
 

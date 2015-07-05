@@ -572,7 +572,6 @@ int OcaTrack::joinBlocks( double t0, double duration ) {
       ret = 1;
       OcaTrackDataBlock* block = it.value();
       it++;
-      double t_end = t0 + duration + Oca_TIME_TOLERANCE;
       while( it != m_blocks.end() ) {
         OcaTrackDataBlock* tmp = it.value();
         double start_time = it.key();
@@ -596,6 +595,69 @@ int OcaTrack::joinBlocks( double t0, double duration ) {
 
   emitChanged( flags );
   return ret;
+}
+
+// ------------------------------------------------------------------------------------
+
+double OcaTrack::moveBlocks( double dt, double t0, double duration )
+{
+  double dt_actual = NAN;
+  uint flags = 0;
+  if( 0 != dt ) {
+    WLock lock( this );
+    QMap<double,OcaTrackDataBlock*>::iterator it = m_blocks.find( findBlock( t0, false ).key() );
+    QMap<double,OcaTrackDataBlock*>::iterator it_end = it;
+    for( ; it_end != m_blocks.end(); it_end++ ) {
+      OcaTrackDataBlock* block = it_end.value();
+      double start_time = it_end.key();
+      Range r = getRange( block, t0 - start_time, duration );
+      if( ! r.isValid() ) {
+        break;
+      }
+    }
+    if( it != it_end ) {
+      if( 0 < dt ) {
+        if( it_end == m_blocks.end() ) {
+          dt_actual = dt;
+        }
+        else {
+          QMap<double,OcaTrackDataBlock*>::iterator tmp = it_end - 1;
+          dt_actual = qMin( dt, it_end.key() - ( tmp.key() + tmp.value()->getLength() / m_sampleRate ) );
+        }
+        Q_ASSERT( 0 <= dt_actual );
+      }
+      else {
+        if( it == m_blocks.begin() ) {
+          dt_actual = dt;
+        }
+        else {
+          QMap<double,OcaTrackDataBlock*>::iterator tmp = it - 1;
+          dt_actual = - qMin( -dt, it.key() - ( tmp.key() + tmp.value()->getLength() / m_sampleRate ) );
+          Q_ASSERT( 0 >= dt_actual );
+        }
+      }
+      if( 0 != dt_actual ) {
+        QMap<double,OcaTrackDataBlock*> tmp_blocks;
+        while( it != it_end ) {
+          OcaTrackDataBlock* block = it.value();
+          double start_time = it.key();
+          it = m_blocks.erase( it );
+          tmp_blocks.insert( start_time + dt_actual, block );
+        }
+        for( it = tmp_blocks.begin() ; it != tmp_blocks.end(); it++ ) {
+          m_blocks.insert( it.key(), it.value() );
+        }
+        flags = e_FlagTrackDataChanged;
+      }
+    }
+
+    if( 0 != flags ) {
+      flags |= updateDuration();
+    }
+  }
+
+  emitChanged( flags );
+  return dt_actual;
 }
 
 // ------------------------------------------------------------------------------------
