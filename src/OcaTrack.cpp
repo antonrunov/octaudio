@@ -378,7 +378,7 @@ void OcaTrack::getDataInternal( DstWrapper* dst, double t0, double duration ) co
 
 // ------------------------------------------------------------------------------------
 
-double OcaTrack::setData( const OcaDataVector* src, double t0 )
+double OcaTrack::setData( const OcaDataVector* src, double t0, double duration /* = 0 */ )
 {
   double t_next = NAN;
   uint flags = 0;
@@ -386,7 +386,14 @@ double OcaTrack::setData( const OcaDataVector* src, double t0 )
   if( ( ! m_readonly ) && ( ! src->isEmpty() ) && isfinite( t0 ) ) {
     WLock lock( this );
 
-    double duration = src->size() / m_sampleRate;
+    bool fill = false;
+    double t00 = t0;
+    if( 0.0 >= duration ) {
+      duration = src->size() / m_sampleRate;
+    }
+    else {
+      fill = true;
+    }
 
     QMap<double,OcaTrackDataBlock*>::const_iterator it0 = findBlock( t0, true );
     OcaTrackDataBlock* block_dst = NULL;
@@ -434,9 +441,40 @@ double OcaTrack::setData( const OcaDataVector* src, double t0 )
       m_blocks.insert( t0, block_dst );
     }
 
-    block_dst->write( src, idx0 );
+    long len = 0;
+    if( fill ) {
+      OcaDataVector* src_fill = NULL;
+      long rem = floor( t0 + duration * m_sampleRate - t00 + Oca_TIME_TOLERANCE );
+      long len_pat = src->size();
+      long k = ( qMin( rem, 0x10000l ) - 1 ) /len_pat  + 1;
+      if( 1 < k ) {
+        src_fill = new OcaDataVector( k * len_pat );
+        double* p = src_fill->data();
+        for( int i = 0; i < k; i++ ) {
+          memcpy( p, src->data(), len_pat * sizeof(double) );
+          p += len_pat;
+        }
+        src = src_fill;
+        len_pat = src->size();
+      }
+      while( 0 < rem ) {
+        long l = block_dst->write( src, idx0, qMin( rem, len_pat ) );
+        len += l;
+        rem -= l;
+        idx0 += l;
+      }
 
-    t_next = t0 + src->size() / m_sampleRate;
+      if( NULL != src_fill ) {
+        delete src_fill;
+        src_fill = NULL;
+        src = NULL;
+      }
+    }
+    else {
+      len = block_dst->write( src, idx0 );
+    }
+
+    t_next = t0 + len / m_sampleRate;
     flags = ( e_FlagTrackDataChanged | updateDuration() );
   }
 

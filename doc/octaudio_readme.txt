@@ -345,6 +345,9 @@ automatically when the object is deleted.
         ...
       will always write a continuous data block with concatenated data.
 
+  t_next = oca_data_fill( pattern, [t_spec], [id], [group_id] )
+      Fill the region with the pattern.
+
   ret = oca_data_clear( [idn], [group_id] )
       Remove all data from the specified track or tracks.
 

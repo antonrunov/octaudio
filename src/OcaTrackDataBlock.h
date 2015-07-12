@@ -37,7 +37,7 @@ class OcaTrackDataBlock
   public:
     long getLength() const;
     long read( OcaDataVector* dst, long ofs, long len ) const;
-    long write( const OcaDataVector* src, long ofs );
+    long write( const OcaDataVector* src, long ofs, long len_max = 0 );
     long readAvg( OcaAvgVector* dst, long decimation, long ofs, long len ) const;
 
     bool split( long ofs, OcaTrackDataBlock* rem );

@@ -165,12 +165,15 @@ int OcaTrackDataBlock::calcAvg2( OcaAvgData* dst, const OcaAvgVector* src, int o
 
 // ------------------------------------------------------------------------------------
 
-long OcaTrackDataBlock::write( const OcaDataVector* src, long ofs )
+long OcaTrackDataBlock::write( const OcaDataVector* src, long ofs, long len_max /* = 0 */ )
 {
   if( ( ofs > m_length ) || ( 0 > ofs ) ) {
     return 0;
   }
-  int len = src->size();
+  long len = src->size();
+  if( 0 < len_max ) {
+    len = qMin( len, len_max );
+  }
   int block_idx = ofs / s_CHUNK_SIZE;
   int block_idx_end = ( ofs + len - 1 ) / s_CHUNK_SIZE;
   m_chunks.reserve( block_idx_end + 1 );

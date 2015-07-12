@@ -76,7 +76,7 @@ class OcaTrack : public OcaTrackBase
     void getData( OcaBlockListData* dst, double t0, double duration ) const;
     long getAvgData( OcaBlockListAvg* dst, double t0,
                      double duration, long decimation_hint ) const;
-    double setData( const OcaDataVector* src, double t0 );
+    double setData( const OcaDataVector* src, double t0, double duration = 0 );
     void deleteData( double t0, double duration );
     void cutData( OcaBlockListData* dst, double t0, double duration );
     double splitBlock( double t0 );

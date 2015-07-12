@@ -1381,6 +1381,42 @@ OCA_BUILTIN(  data_moveblocks,
 }
 
 // ----------------------------------------------------------------------------
+
+OCA_BUILTIN(  data_fill,
+              "t_next = oca_data_fill( pattern, [t_spec], [id], [group_id] )"   )
+{
+  OcaTrackGroup* group = NULL;
+  OcaTrack* track = id_to_datatrack( args, 2, 3, &group );
+  double t_next = NAN;
+  octave_value dt_pat = safe_arg( args, 0 );
+  if( NULL == track ) {
+    error( "invalid track" );
+  }
+  else if( ! dt_pat.is_real_type() ) {
+    error( "invalid pattern" );
+  }
+  else {
+    Q_ASSERT( NULL != group );
+    octave_value t_spec_val = safe_arg( args, 1 );
+    NDArray t_spec = get_time_spec( t_spec_val, track, group );
+    if( 2 == t_spec.length() ) {
+      double t = t_spec(0);
+      double dur = t_spec(1);
+      if( ( ! std::isfinite( dur ) ) || ( 0.0 > dur ) ) {
+        error( "invalid duration" );
+      }
+      NDArray pat = dt_pat.array_value();
+      int length = pat.nelem();
+      OcaDataVector block( length );
+      memcpy( block.data(), pat.fortran_vec(), length * sizeof(double) );
+      t_next = track->setData( &block, t, dur );
+    }
+  }
+
+  return octave_value( t_next );
+}
+
+// ----------------------------------------------------------------------------
 // group
 
 OCA_BUILTIN(  group_add,
@@ -2063,6 +2099,7 @@ void OcaOctaveHost::initialize()
   INSTALL_OCA_BUILTIN( data_split );
   INSTALL_OCA_BUILTIN( data_join );
   INSTALL_OCA_BUILTIN( data_moveblocks );
+  INSTALL_OCA_BUILTIN( data_fill );
 
   INSTALL_OCA_BUILTIN( group_add );
   INSTALL_OCA_BUILTIN( group_remove );
