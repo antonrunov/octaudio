@@ -177,16 +177,14 @@ long OcaTrackDataBlock::write( const OcaDataVector* src, long ofs, long len_max 
   int block_idx = ofs / s_CHUNK_SIZE;
   int block_idx_end = ( ofs + len - 1 ) / s_CHUNK_SIZE;
   m_chunks.reserve( block_idx_end + 1 );
-  while( m_chunks.size() <= block_idx_end ) {
-    OcaDataVector v;
-    v.reserve( s_CHUNK_SIZE );
-    m_chunks.append( v );
+  for( int i = m_chunks.size(); i <= block_idx_end; i++ ) {
+    m_chunks.append( OcaDataVector() );
+    m_chunks[i].reserve( s_CHUNK_SIZE );
   }
   int avg_ofs = ofs / s_AVG_FACTOR;
   int avg_len = (ofs + len - 1 ) / s_AVG_FACTOR + 1 - avg_ofs;
   OcaAvgVector avg( avg_len );
   int avg_idx = 0;
-
 
   int i0 = ofs - block_idx * s_CHUNK_SIZE;
   long result = 0;
@@ -197,7 +195,6 @@ long OcaTrackDataBlock::write( const OcaDataVector* src, long ofs, long len_max 
     int l = qMin( (int)(len-result), s_CHUNK_SIZE - i0 );
     Q_ASSERT( 0 < l );
     Q_ASSERT( i0 + l <= s_CHUNK_SIZE );
-    // TODO: optimize OcaDataVector::resize
     if( v->size() < i0 + l ) {
       v->resize( i0 + l );
     }
@@ -225,10 +222,9 @@ void OcaTrackDataBlock::writeAvgChunks( long ofs, const OcaAvgVector* avg, int o
 
   int block_idx_end = ( ofs + len - 1 ) / s_CHUNK_SIZE;
   dst.reserve( block_idx_end + 1 );
-  while( dst.size() <= block_idx_end ) {
-    OcaAvgVector v;
-    v.reserve( s_CHUNK_SIZE );
-    dst.append( v );
+  for( int i = dst.size(); i <= block_idx_end; i++ ) {
+    dst.append( OcaAvgVector() );
+    dst[i].reserve( s_CHUNK_SIZE );
   }
 
   int avg_ofs = ofs / s_AVG_FACTOR;
@@ -242,7 +238,6 @@ void OcaTrackDataBlock::writeAvgChunks( long ofs, const OcaAvgVector* avg, int o
   while( 0 < len ) {
     OcaAvgVector* dst_v = &dst[block_idx];
     int l = qMin( len, s_CHUNK_SIZE - idx0 );
-    // TODO: optimize OcaAvgVector::resize
     if( dst_v->size() < idx0 + l ) {
       dst_v->resize( idx0 + l );
     }
