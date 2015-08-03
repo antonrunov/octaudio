@@ -20,7 +20,7 @@
 #ifndef OcaTrackDataBlock_h
 #define OcaTrackDataBlock_h
 
-#include "octaudio.h"
+#include "OcaDataVector.h"
 
 #include <QList>
 #include <QVector>
@@ -28,7 +28,7 @@
 class OcaTrackDataBlock
 {
   public:
-    OcaTrackDataBlock();
+    OcaTrackDataBlock( int channels );
     ~OcaTrackDataBlock();
 
   public:
@@ -36,6 +36,7 @@ class OcaTrackDataBlock
 
   public:
     long getLength() const;
+    int  getChannels() const { return m_channels; }
     long read( OcaDataVector* dst, long ofs, long len ) const;
     long write( const OcaDataVector* src, long ofs, long len_max = 0 );
     long readAvg( OcaAvgVector* dst, long decimation, long ofs, long len ) const;
@@ -51,6 +52,7 @@ class OcaTrackDataBlock
     void writeAvgChunks( long ofs, const OcaAvgVector* avg, int order, bool truncate );
 
   protected:
+    int                               m_channels;
     long                              m_length;
     QList<OcaDataVector>              m_chunks;
     QVector< QList<OcaAvgVector> >    m_avgChunks;

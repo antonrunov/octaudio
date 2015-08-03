@@ -34,7 +34,8 @@ OcaTrack::OcaTrack( const QString& name, double sr )
   m_readonly( false ),
   m_audible( 8000 <= sr ),
   m_gain( 1.0 ),
-  m_stereoPan( 0.0 )
+  m_stereoPan( 0.0 ),
+  m_channels( 1 )
 {
 }
 
@@ -145,6 +146,21 @@ void OcaTrack::setAudible( bool audible )
     }
   }
   emitChanged( flags );
+}
+
+// ------------------------------------------------------------------------------------
+
+bool OcaTrack::setChannels( int channels )
+{
+  uint flags = 0;
+  if( 0 < channels ) {
+    WLock lock( this );
+    if( ( m_channels != channels ) && m_blocks.isEmpty() ) {
+      m_channels = channels;
+      flags = e_FlagChannelsChanged;
+    }
+  }
+  return emitChanged( flags );
 }
 
 // ------------------------------------------------------------------------------------
@@ -371,6 +387,7 @@ void OcaTrack::getDataInternal( DstWrapper* dst, double t0, double duration ) co
     if( ! r.isValid() ) {
       break;
     }
+    Q_ASSERT( block->getChannels() == m_channels );
     dst->addBlock( block, r, start_time + r.start / m_sampleRate );
   }
 
@@ -386,96 +403,106 @@ double OcaTrack::setData( const OcaDataVector* src, double t0, double duration /
   if( ( ! m_readonly ) && ( ! src->isEmpty() ) && isfinite( t0 ) ) {
     WLock lock( this );
 
-    bool fill = false;
-    double t00 = t0;
-    if( 0.0 >= duration ) {
-      duration = src->size() / m_sampleRate;
+    if( src->channels() != m_channels ) {
+      // error
     }
     else {
-      fill = true;
-    }
 
-    QMap<double,OcaTrackDataBlock*>::const_iterator it0 = findBlock( t0, true );
-    OcaTrackDataBlock* block_dst = NULL;
-    long idx0 = 0;
-
-    if( m_blocks.constEnd() != it0 ) {
-      QMap<double,OcaTrackDataBlock*>::iterator it = m_blocks.find( it0.key() );
-
-      Range r = getRange( it.value(), t0 - it.key(), 0 );
-      idx0 = r.start;
-      if( r.isValid() ) {
-        block_dst = it.value();
-        t0 = it.key() + r.start / m_sampleRate;
-        it++;
+      bool fill = false;
+      double t00 = t0;
+      if( 0.0 >= duration ) {
+        duration = src->length() / m_sampleRate;
+      }
+      else {
+        fill = true;
       }
 
-      while( it != m_blocks.end() ) {
-        OcaTrackDataBlock* block = it.value();
-        double start = it.key();
-        r = getRange( block, t0 - start, duration );
-        if( ! r.isValid() ) {
-          break;
+      QMap<double,OcaTrackDataBlock*>::const_iterator it0 = findBlock( t0, true );
+      OcaTrackDataBlock* block_dst = NULL;
+      long idx0 = 0;
+
+      if( m_blocks.constEnd() != it0 ) {
+        QMap<double,OcaTrackDataBlock*>::iterator it = m_blocks.find( it0.key() );
+
+        Range r = getRange( it.value(), t0 - it.key(), 0 );
+        idx0 = r.start;
+        if( r.isValid() ) {
+          block_dst = it.value();
+          t0 = it.key() + r.start / m_sampleRate;
+          it++;
         }
-        Q_ASSERT( 0 == r.start );
-        OcaTrackDataBlock* tmp = NULL;
-        if( block->getLength() > r.end ) {
-          tmp = new OcaTrackDataBlock;
-          if( ! block->split( r.end, tmp ) ) {
-            Q_ASSERT( false );
+
+        while( it != m_blocks.end() ) {
+          OcaTrackDataBlock* block = it.value();
+          double start = it.key();
+          r = getRange( block, t0 - start, duration );
+          if( ! r.isValid() ) {
+            break;
+          }
+          Q_ASSERT( 0 == r.start );
+          OcaTrackDataBlock* tmp = NULL;
+          if( block->getLength() > r.end ) {
+            Q_ASSERT( block->getChannels() == m_channels );
+            tmp = new OcaTrackDataBlock( m_channels );
+            if( ! block->split( r.end, tmp ) ) {
+              Q_ASSERT( false );
+            }
+          }
+          delete block;
+          block = NULL;
+          it = m_blocks.erase( it );
+          if( NULL != tmp ) {
+            m_blocks.insert( start + r.end / m_sampleRate, tmp );
+            break;
           }
         }
-        delete block;
-        block = NULL;
-        it = m_blocks.erase( it );
-        if( NULL != tmp ) {
-          m_blocks.insert( start + r.end / m_sampleRate, tmp );
-          break;
+      }
+
+      if( NULL == block_dst ) {
+        Q_ASSERT( 0 == idx0 );
+        block_dst = new OcaTrackDataBlock( m_channels );
+        m_blocks.insert( t0, block_dst );
+      }
+      else {
+        Q_ASSERT( block_dst->getChannels() == m_channels );
+      }
+
+      long len = 0;
+      if( fill ) {
+        OcaDataVector* src_fill = NULL;
+        long rem = floor( t0 + duration * m_sampleRate - t00 + Oca_TIME_TOLERANCE );
+        long len_pat = src->length();
+        long k = ( qMin( rem, 0x10000l ) - 1 ) /len_pat  + 1;
+        if( 1 < k ) {
+          src_fill = new OcaDataVector( m_channels, k * len_pat );
+          double* p = src_fill->data();
+          for( int i = 0; i < k; i++ ) {
+            memcpy( p, src->constData(), len_pat * m_channels * sizeof(double) );
+            p += len_pat * m_channels;
+          }
+          src = src_fill;
+          len_pat = src->length();
+        }
+        while( 0 < rem ) {
+          long l = block_dst->write( src, idx0, qMin( rem, len_pat ) );
+          len += l;
+          rem -= l;
+          idx0 += l;
+        }
+
+        if( NULL != src_fill ) {
+          delete src_fill;
+          src_fill = NULL;
+          src = NULL;
         }
       }
-    }
-
-    if( NULL == block_dst ) {
-      Q_ASSERT( 0 == idx0 );
-      block_dst = new OcaTrackDataBlock;
-      m_blocks.insert( t0, block_dst );
-    }
-
-    long len = 0;
-    if( fill ) {
-      OcaDataVector* src_fill = NULL;
-      long rem = floor( t0 + duration * m_sampleRate - t00 + Oca_TIME_TOLERANCE );
-      long len_pat = src->size();
-      long k = ( qMin( rem, 0x10000l ) - 1 ) /len_pat  + 1;
-      if( 1 < k ) {
-        src_fill = new OcaDataVector( k * len_pat );
-        double* p = src_fill->data();
-        for( int i = 0; i < k; i++ ) {
-          memcpy( p, src->data(), len_pat * sizeof(double) );
-          p += len_pat;
-        }
-        src = src_fill;
-        len_pat = src->size();
-      }
-      while( 0 < rem ) {
-        long l = block_dst->write( src, idx0, qMin( rem, len_pat ) );
-        len += l;
-        rem -= l;
-        idx0 += l;
+      else {
+        len = block_dst->write( src, idx0 );
       }
 
-      if( NULL != src_fill ) {
-        delete src_fill;
-        src_fill = NULL;
-        src = NULL;
-      }
+      t_next = t0 + len / m_sampleRate;
+      flags = ( e_FlagTrackDataChanged | updateDuration() );
     }
-    else {
-      len = block_dst->write( src, idx0 );
-    }
-
-    t_next = t0 + len / m_sampleRate;
-    flags = ( e_FlagTrackDataChanged | updateDuration() );
   }
 
   emitChanged( flags );
@@ -522,6 +549,7 @@ void OcaTrack::cutData( OcaBlockListData* dst, double t0, double duration )
       QMap<double,OcaTrackDataBlock*>::iterator it = m_blocks.find( it0.key() );
       while( it != m_blocks.end() ) {
         OcaTrackDataBlock* block = it.value();
+        Q_ASSERT( block->getChannels() == m_channels );
         double start_time = it.key();
         Range r = getRange( block, t0 - start_time, duration );
         if( ! r.isValid() ) {
@@ -533,7 +561,7 @@ void OcaTrack::cutData( OcaBlockListData* dst, double t0, double duration )
         }
         bool done = false;
         if( block->getLength() > r.end ) {
-          OcaTrackDataBlock* tmp = new OcaTrackDataBlock;
+          OcaTrackDataBlock* tmp = new OcaTrackDataBlock( m_channels );
           if( ! block->split( r.end, tmp ) ) {
             Q_ASSERT( false );
           }
@@ -574,6 +602,7 @@ double OcaTrack::splitBlock( double t0 )
     if( it0 != m_blocks.end() ) {
       QMap<double,OcaTrackDataBlock*>::iterator it = m_blocks.find( it0.key() );
       OcaTrackDataBlock* block = it.value();
+      Q_ASSERT( block->getChannels() == m_channels );
       double start_time = it.key();
       Range r = getRange( block, t0 - start_time, 0 );
       if( r.isValid() ) {
@@ -581,7 +610,7 @@ double OcaTrack::splitBlock( double t0 )
           t_ret = start_time;
         }
         else {
-          OcaTrackDataBlock* tmp = new OcaTrackDataBlock;
+          OcaTrackDataBlock* tmp = new OcaTrackDataBlock( m_channels );
           if( ! block->split( r.start, tmp ) ) {
             Q_ASSERT( false );
           }
@@ -599,7 +628,8 @@ double OcaTrack::splitBlock( double t0 )
 
 // ------------------------------------------------------------------------------------
 
-int OcaTrack::joinBlocks( double t0, double duration ) {
+int OcaTrack::joinBlocks( double t0, double duration )
+{
   int ret = 0;
   uint flags = 0;
   {
@@ -609,9 +639,11 @@ int OcaTrack::joinBlocks( double t0, double duration ) {
       QMap<double,OcaTrackDataBlock*>::iterator it = m_blocks.find( it0.key() );
       ret = 1;
       OcaTrackDataBlock* block = it.value();
+      Q_ASSERT( block->getChannels() == m_channels );
       it++;
       while( it != m_blocks.end() ) {
         OcaTrackDataBlock* tmp = it.value();
+        Q_ASSERT( tmp->getChannels() == m_channels );
         double start_time = it.key();
         Range r = getRange( tmp, t0 - start_time, duration );
         if( ( ! r.isValid() ) ) {

@@ -33,12 +33,14 @@ class OcaResampler
     ~OcaResampler();
 
   public:
+    bool init( int channels );
     int resample( const OcaFloatVector* in, OcaFloatVector* out, double ratio, int ofs );
 
   protected:
     double      m_posSrc;
     double      m_posDst;
     SRC_STATE*  m_resampler;
+    int         m_channels;
 };
 
 // -----------------------------------------------------------------------------
@@ -46,11 +48,10 @@ class OcaResampler
 class OcaTrackWriter : public OcaResampler
 {
   public:
-    OcaTrackWriter( OcaTrack* track ) : m_track( track ) {}
+    OcaTrackWriter( OcaTrack* track ) : m_track( track ) { init(1); }
 
   public:
     void  write( const OcaFloatVector* src, double t, double rate );
-    void  flash(); // TODO
 
   protected:
     OcaTrack*   m_track;

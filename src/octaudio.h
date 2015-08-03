@@ -20,20 +20,7 @@
 #ifndef octaudio_h
 #define octaudio_h
 
-#include <QVarLengthArray>
-
 typedef unsigned long   oca_ulong;
 typedef long            oca_index;
-
-struct OcaAvgData {
-  double min;
-  double max;
-  double avg;
-  double var;
-};
-
-typedef QVarLengthArray<double,0>     OcaDataVector;
-typedef QVarLengthArray<OcaAvgData,0> OcaAvgVector;
-typedef QVarLengthArray<float,0>      OcaFloatVector;
 
 #endif // octaudio_h

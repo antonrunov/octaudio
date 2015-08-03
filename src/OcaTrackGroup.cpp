@@ -199,14 +199,14 @@ double OcaTrackGroup::getRegionDuration() const
 double OcaTrackGroup::readPlaybackData( double t, double t_max, OcaRingBuffer* rbuff,
                                                                 double rate, bool duplex )
 {
-  int len_read = 0;
+  long len_read = 0;
   int length = rbuff->getAvailableSpace() / 2;
   if( isfinite( t_max ) ) {
     length = qMin( length, qRound( ( t_max - t ) * rate ) );
   }
   if( 0 < length ) {
     OcaLock lock( this );
-    OcaFloatVector buffer( length * 2 );
+    OcaFloatVector buffer( 2, length );
     memset( buffer.data(), 0, sizeof(float)*length * 2 );
 
     bool solo = false;
@@ -228,6 +228,7 @@ double OcaTrackGroup::readPlaybackData( double t, double t_max, OcaRingBuffer* r
       if( w->isMuted() && ( ! solo ) ) {
         continue;
       }
+      OcaLock lock(w);
       OcaTrackReader* reader = m_readers.value( w );
       if( NULL == reader ) {
         reader = new OcaTrackReader( w );
@@ -237,7 +238,11 @@ double OcaTrackGroup::readPlaybackData( double t, double t_max, OcaRingBuffer* r
       OcaFloatVector data;
       reader->read( &data, t, length, rate );
 
-      if( 0 < data.size() ) {
+      if( 0 < data.length() ) {
+        const float* p_src = data.constData();
+        float* p_dst = buffer.data();
+        float* max_dst = p_dst + data.length() * 2;
+
         double gainLeft = w->getGain();
         double gainRight = gainLeft;
         double pan = w->getStereoPan();
@@ -248,14 +253,21 @@ double OcaTrackGroup::readPlaybackData( double t, double t_max, OcaRingBuffer* r
           gainLeft *= qMax( 0.0, 1 - pan );
         }
 
-        const float* p_src = data.constData();
-        float* p_dst = buffer.data();
-        float* max_dst = p_dst + data.size() * 2;
-        while( p_dst < max_dst ) {
-          (*p_dst++) += (*p_src) * gainLeft;
-          (*p_dst++) += (*p_src++) * gainRight;
+        if( 2 > data.channels() ) {
+          while( p_dst < max_dst ) {
+            (*p_dst++) += (*p_src) * gainLeft;
+            (*p_dst++) += (*p_src++) * gainRight;
+          }
         }
-        len_read = qMax( len_read,  data.size() );
+        else {
+          int dc = data.channels() - 2;
+          while( p_dst < max_dst ) {
+            (*p_dst++) += (*p_src++) * gainLeft;
+            (*p_dst++) += (*p_src++) * gainRight;
+            p_src += dc;
+          }
+        }
+        len_read = qMax( len_read,  data.length() );
       }
     }
     if( 0 < len_read ) {
@@ -323,13 +335,13 @@ double OcaTrackGroup::writeRecordingData( double t, double t_max, OcaRingBuffer*
       }
     }
     if( 0 < length ) {
-      OcaFloatVector buffer( length * 2 );
+      OcaFloatVector buffer( 2, length );
       int tmp = rbuff->read( buffer.data(), length * 2 );
       Q_ASSERT( tmp == length * 2 );
       (void) tmp;
 
-      OcaFloatVector block1( length );
-      OcaFloatVector block2( length );
+      OcaFloatVector block1( 1, length );
+      OcaFloatVector block2( 1, length );
 
       const float* p_src = buffer.constData();
       float* p_dst1 = block1.data();

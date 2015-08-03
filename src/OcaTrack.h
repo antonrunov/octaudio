@@ -20,7 +20,7 @@
 #ifndef OcaTrack_h
 #define OcaTrack_h
 
-#include "octaudio.h"
+#include "OcaDataVector.h"
 #include "OcaTrackBase.h"
 #include "OcaBlockList.h"
 
@@ -28,7 +28,7 @@
 #include <QPair>
 #include <QList>
 
-const double Oca_TIME_TOLERANCE = 1.0e-5 / 7;
+const double Oca_TIME_TOLERANCE = 1.0e-6;
 class OcaTrackDataBlock;
 
 typedef OcaBlockList<OcaDataVector>  OcaBlockListData;
@@ -45,7 +45,7 @@ class OcaTrack : public OcaTrackBase
   Q_PROPERTY( double gain READ getGain WRITE setGain );
   Q_PROPERTY( double stereo_pan READ getStereoPan WRITE setStereoPan );
   Q_PROPERTY( double start READ getStartTime WRITE setStartTime );
-  //Q_PROPERTY( bool stereo );
+  Q_PROPERTY( int channels READ getChannels WRITE setChannels );
 
   public:
     OcaTrack( const QString& name, double sr );
@@ -62,6 +62,7 @@ class OcaTrack : public OcaTrackBase
     void setGain( double gain );
     double getStereoPan() const { return m_stereoPan; }
     void setStereoPan( double pan );
+    int getChannels() const { return m_channels; }
     virtual double getZero() const { return m_scaleData.getZero(); }
     virtual double getScale() const { return m_scaleData.getScale(); }
 
@@ -93,6 +94,7 @@ class OcaTrack : public OcaTrackBase
     void setMute( bool on );
     void setReadonly( bool readonly );
     void setAudible( bool on );
+    bool setChannels( int channels );
 
   protected:
     double    m_sampleRate;
@@ -103,6 +105,7 @@ class OcaTrack : public OcaTrackBase
     bool      m_audible;
     double    m_gain;
     double    m_stereoPan;
+    int       m_channels;
 
   protected:
     QMap<double,OcaTrackDataBlock*>   m_blocks;

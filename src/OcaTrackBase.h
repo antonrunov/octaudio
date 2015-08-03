@@ -65,6 +65,7 @@ class OcaTrackBase : public OcaObject
       e_FlagStereoPanChanged          = 0x00001000,
       e_FlagReadonlyChanged           = 0x00002000,
       e_FlagSampleRateChanged         = 0x00004000,
+      e_FlagChannelsChanged           = 0x00008000,
       // Smart
       e_FlagSubtrackAdded             = 0x00010000,
       e_FlagSubtrackRemoved           = 0x00020000,

@@ -652,97 +652,100 @@ void OcaDataScreen::updateBlocks(   QList<DataBlock*>* list,
   for( int idx = 0; idx < data.getSize(); idx++ ) {
     const OcaAvgVector* src_block = data.getBlock( idx );
     double t = data.getTime( idx );
-    if( 0 == src_block->size() ) {
+    if( 0 == src_block->length() ) {
       continue;
     }
-    DataBlock* dst_block = new DataBlock;
-    dst_block->setZero( zero );
-    dst_block->setScale( scale );
-    dst_block->setHeight( height() );
-    dst_block->setColor( color );
-    dst_block->setAbsValueMode( m_absValueMode );
+    for( int ch=0; ch < src_block->channels(); ch++ ) {
+      DataBlock* dst_block = new DataBlock;
+      dst_block->setZero( zero );
+      dst_block->setScale( scale );
+      dst_block->setHeight( height() );
+      dst_block->setColor( color );
+      dst_block->setAbsValueMode( m_absValueMode );
 
-    double x = ( t - m_viewPosition ) / m_timeScale;
-    double dx = decimation / ( track->getSampleRate() * m_timeScale );
-    bool force_points = false;
+      double x = ( t - m_viewPosition ) / m_timeScale;
+      double dx = decimation / ( track->getSampleRate() * m_timeScale );
+      bool force_points = false;
 
-    QVector<QLineF> lines;
-    if( 1 < decimation ) {
-      int x_min = qMax( 0, (int)floor(x) );
-      int x_max = qMin( width()-1, (int)ceil(x + dx * src_block->size() ) ) + 1;
-      int x_cur = x_min;
-      if( x_min < x_max ) {
-        lines.resize( x_max - x_min );
-        QLineF* l = lines.data();
-        const OcaAvgData* v = src_block->constData();
-        double v_min = v->min;
-        double v_max = v->max;
-        for( int i = 0; i < src_block->size(); i++ ) {
-          if( floor(x + dx) > x_cur ) {
-            Q_ASSERT( x_cur < x_max );
-            v_max = qMax( v_max, v->min );
-            v_min = qMin( v_min, v->max );
-            l->setLine( x_cur, v_min, x_cur, v_max );
-            v_min = v->min;
-            v_max = v->max;
-            l++;
-            if( ++x_cur == x_max ) {
-              break;
+      QVector<QLineF> lines;
+      if( 1 < decimation ) {
+        int x_min = qMax( 0, (int)floor(x) );
+        int x_max = qMin( width()-1, (int)ceil(x + dx * src_block->length() ) ) + 1;
+        int x_cur = x_min;
+        if( x_min < x_max ) {
+          lines.resize( x_max - x_min );
+          QLineF* l = lines.data();
+          const OcaAvgData* v = src_block->constData() + ch;
+          double v_min = v->min;
+          double v_max = v->max;
+          for( int i = 0; i < src_block->length(); i++ ) {
+            if( floor(x + dx) > x_cur ) {
+              Q_ASSERT( x_cur < x_max );
+              v_max = qMax( v_max, v->min );
+              v_min = qMin( v_min, v->max );
+              l->setLine( x_cur, v_min, x_cur, v_max );
+              v_min = v->min;
+              v_max = v->max;
+              l++;
+              if( ++x_cur == x_max ) {
+                break;
+              }
             }
+            else {
+              v_min = qMin( v_min, v->min );
+              v_max = qMax( v_max, v->max );
+            }
+            v += src_block->channels();
+            x += dx;
           }
-          else {
-            v_min = qMin( v_min, v->min );
-            v_max = qMax( v_max, v->max );
+          if( x_cur < x_max ) {
+            l->setLine( x_cur, v_min, x_cur, v_max );
           }
-          ++v;
-          x += dx;
-        }
-        if( x_cur < x_max ) {
-          l->setLine( x_cur, v_min, x_cur, v_max );
         }
       }
-    }
-    /*
-    else if( 2 > dx  ){
-    }
-    */
-    else {
-      int idx_start = qBound( 0, (int)floor( -x / dx ), (int)src_block->size() - 1 );
-      int idx_end = qBound( 0, (int)ceil( ( width() - 1 - x ) / dx ), (int)src_block->size() - 1 );
-      Q_ASSERT( idx_start <= idx_end );
-      int len = idx_end - idx_start;
-      const OcaAvgData* v = src_block->constData() + idx_start;
-      x += idx_start * dx;
-      if( 0 < len ) {
-        lines.resize( len );
-        QLineF* l = lines.data();
-        for( int i = 0; i < len; i++ ) {
-          l->setLine( round(x), v->avg, round(x+dx), (v+1)->avg );
-          x += dx;
-          v++;
-          l++;
-        }
+      /*
+      else if( 2 > dx  ){
       }
+      */
       else {
-        force_points = true;
+        int idx_start = qBound( 0, (int)floor( -x / dx ), (int)src_block->length() - 1 );
+        int idx_end = qBound( 0, (int)ceil( ( width() - 1 - x ) / dx ), (int)src_block->length() - 1 );
+        Q_ASSERT( idx_start <= idx_end );
+        int len = idx_end - idx_start;
+        const OcaAvgData* v = src_block->constData() + idx_start * src_block->channels() + ch;
+        x += idx_start * dx;
+        if( 0 < len ) {
+          lines.resize( len );
+          QLineF* l = lines.data();
+          for( int i = 0; i < len; i++ ) {
+            l->setLine( round(x), v->avg, round(x+dx), (v + src_block->channels())->avg );
+            x += dx;
+            v += src_block->channels();
+            l++;
+          }
+        }
+        else {
+          force_points = true;
+        }
       }
-    }
-    dst_block->setLines( lines );
+      dst_block->setLines( lines );
 
-    x = ( t - m_viewPosition ) / m_timeScale;
-    if( ( 0.2 > track->getSampleRate() * m_timeScale ) || force_points ) {
-      QVector<QPointF> points( src_block->size() );
-      const OcaAvgData* v = src_block->constData();
-      QPointF* p = points.data();
-      for( int i = 0; i < src_block->size(); i++ ) {
-        p->setX( round(x) );
-        p->setY( (v++)->avg );
-        x += dx;
-        p++;
+      x = ( t - m_viewPosition ) / m_timeScale;
+      if( ( 0.2 > track->getSampleRate() * m_timeScale ) || force_points ) {
+        QVector<QPointF> points( src_block->length() );
+        const OcaAvgData* v = src_block->constData() + ch;
+        QPointF* p = points.data();
+        for( int i = 0; i < src_block->length(); i++ ) {
+          p->setX( round(x) );
+          p->setY( v->avg );
+          v += src_block->channels();
+          x += dx;
+          p++;
+        }
+        dst_block->setPoints( points );
       }
-      dst_block->setPoints( points );
+      list->append( dst_block );
     }
-    list->append( dst_block );
   }
 
 }

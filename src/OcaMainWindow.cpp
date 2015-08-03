@@ -1002,8 +1002,8 @@ void OcaMainWindow::updateStatusBar()
 
       if( ! data.isEmpty() ) {
         const OcaDataVector* block = data.getBlock(0);
-        if( 0 < block->size() ) {
-          x = block->at(0);
+        if( ! block->isEmpty() ) {
+          x = *block->constData();
         }
       }
       s = QString( "%1 Hz   %2  |  v = %4  |  " )

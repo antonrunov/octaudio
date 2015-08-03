@@ -1115,9 +1115,9 @@ OCA_BUILTIN(  data_get,
 
       if( ! data.isEmpty() ) {
         const OcaDataVector* block = data.getBlock( 0 );
-        if( 0 < block->size() ) {
-          ar = NDArray( dim_vector( block->size(), 1 ) );
-          memcpy( ar.fortran_vec(), block->constData(), block->size() * sizeof(double) );
+        if( 0 < block->length() ) {
+          ar = NDArray( dim_vector( block->channels(), block->length() ) );
+          memcpy( ar.fortran_vec(), block->constData(), ar.nelem() * sizeof(double) );
           t0_true = data.getTime( 0 );
         }
       }
@@ -1159,13 +1159,31 @@ OCA_BUILTIN(  data_set,
     else {
       double t = val_t.double_value();
       NDArray ar = val_data.array_value();
+      int channels = track->getChannels();
+      int length = ar.length();
+      if( 1 < channels ) {
+        if( ar.dim1() == channels ) {
+          length = ar.dim2();
+        }
+        else {
+          error( "invalid number of channels (%d)", ar.dim1() );
+          length = 0;
+        }
+      }
+      else {
+        Q_ASSERT( 1 == channels );
+        if( ! ar.is_vector() ) {
+          error( "data is not a vector" );
+          length = 0;
+        }
+      }
+      if( 0 < length ) {
+        OcaDataVector block( channels, length );
+        memcpy( block.data(), ar.fortran_vec(), length * channels * sizeof(double) );
+        t_next = track->setData( &block, t );
 
-      int length = ar.nelem();
-      OcaDataVector block( length );
-      memcpy( block.data(), ar.fortran_vec(), length * sizeof(double) );
-      t_next = track->setData( &block, t );
-
-      validate_Track( track );
+        validate_Track( track );
+      }
     }
   }
 
@@ -1254,9 +1272,9 @@ static octave_value_list process_data_blocks( const octave_value_list& args, int
         NDArray starts( dim_vector( 1, data.getSize() ) );
         for( int i = 0; i < data.getSize(); i++ ) {
           const OcaDataVector* block = data.getBlock( i );
-          if( 0 < block->size() ) {
-            NDArray ar( dim_vector( block->size(), 1 ) );
-            memcpy( ar.fortran_vec(), block->constData(), block->size() * sizeof(double) );
+          if( 0 < block->length() ) {
+            NDArray ar( dim_vector( block->channels(), block->length() ) );
+            memcpy( ar.fortran_vec(), block->constData(), ar.nelem() * sizeof(double) );
             starts(i) = data.getTime( i );
             c(i) = ar;
           }
@@ -1406,10 +1424,29 @@ OCA_BUILTIN(  data_fill,
         error( "invalid duration" );
       }
       NDArray pat = dt_pat.array_value();
-      int length = pat.nelem();
-      OcaDataVector block( length );
-      memcpy( block.data(), pat.fortran_vec(), length * sizeof(double) );
-      t_next = track->setData( &block, t, dur );
+      int channels = track->getChannels();
+      int length = pat.length();
+      if( 1 < channels ) {
+        if( pat.dim1() == channels ) {
+          length = pat.dim2();
+        }
+        else {
+          error( "invalid number of channels (%d)", pat.dim1() );
+          length = 0;
+        }
+      }
+      else {
+        Q_ASSERT( 1 == channels );
+        if( ! pat.is_vector() ) {
+          error( "data is not a vector" );
+          length = 0;
+        }
+      }
+      if( 0 < length ) {
+        OcaDataVector block( channels, length );
+        memcpy( block.data(), pat.fortran_vec(), length * channels * sizeof(double) );
+        t_next = track->setData( &block, t, dur );
+      }
     }
   }
 
