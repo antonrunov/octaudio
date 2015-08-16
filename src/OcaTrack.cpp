@@ -763,7 +763,7 @@ OcaTrack::Range OcaTrack::getRange( const OcaTrackDataBlock* block,
   r.end = block->getLength();
   if( INFINITY > duration ) {
     r.end = qMax( -1.0, floor( ( dt + duration ) * m_sampleRate ) );
-    if( r.start == r.end ) {
+    if( ( r.start == r.end ) && ( 0 < dt ) ) {
       r.end++;
     }
     r.end = qMin( block->getLength(), r.end );
