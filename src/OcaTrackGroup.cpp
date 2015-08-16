@@ -294,11 +294,9 @@ double OcaTrackGroup::writeRecordingData( double t, double t_max, OcaRingBuffer*
   if( ( NULL == track1 ) && ( NULL == track2 ) ) {
     if( first ) {
       track1 = new OcaTrack( NULL, getDefaultSampleRate() );
-      track1->setStereoPan( -1.0 );
+      track1->setChannels( 2 );
       addTrack( track1 );
-      track2 = new OcaTrack( NULL, getDefaultSampleRate() );
-      track2->setStereoPan( 1.0 );
-      addTrack( track2 );
+      track2 = track1;
       {
         WLock lock( this );
         m_recordingTrack1 = track1;
@@ -313,9 +311,9 @@ double OcaTrackGroup::writeRecordingData( double t, double t_max, OcaRingBuffer*
   }
 
   if( isfinite(t) ) {
-    bool mono = false;
+    int multi_mode = 0;
     if( track1 == track2 ) {
-      mono = true;
+      multi_mode = ( 1 == track1->getChannels() ) ? 1 : 2;
       track2 = NULL;
     }
     if( first ) {
@@ -340,20 +338,25 @@ double OcaTrackGroup::writeRecordingData( double t, double t_max, OcaRingBuffer*
       Q_ASSERT( tmp == length * 2 );
       (void) tmp;
 
-      OcaFloatVector block1( 1, length );
+      OcaFloatVector block1( ( 2 == multi_mode ) ? 2 : 1, length );
       OcaFloatVector block2( 1, length );
 
       const float* p_src = buffer.constData();
       float* p_dst1 = block1.data();
       float* p_dst2 = block2.data();
-      float* max_dst1 = p_dst1 + length;
-      while( p_dst1 < max_dst1 ) {
-        if( mono ) {
+      const float* max_src = p_src + length * 2;
+      while( p_src < max_src ) {
+        if( 1 == multi_mode ) {
           float tmp   = *p_src++;
           tmp        += *p_src++;
           (*p_dst1++) = tmp * 0.5;
         }
+        else if( 2 == multi_mode ) {
+          (*p_dst1++) = (*p_src++);
+          (*p_dst1++) = (*p_src++);
+        }
         else {
+          Q_ASSERT( 0 == multi_mode );
           (*p_dst1++) = (*p_src++);
           (*p_dst2++) = (*p_src++);
         }

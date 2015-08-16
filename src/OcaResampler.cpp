@@ -23,14 +23,30 @@
 
 // -----------------------------------------------------------------------------
 
-static void float_to_double( const OcaFloatVector* src, OcaDataVector* dst )
+static void float_to_double( const OcaFloatVector* src, OcaDataVector* dst, int channels )
 {
-  dst->alloc( src->channels(), src->length() );
+  dst->alloc( channels, src->length() );
   const float* p_src = src->constData();
   double* p_dst = dst->data();
   double* max_dst = p_dst + dst->length() * dst->channels();
-  while( p_dst < max_dst ) {
-    *p_dst++ = *p_src++;
+  if( dst->channels() == src->channels() ) {
+    while( p_dst < max_dst ) {
+      *p_dst++ = *p_src++;
+    }
+  }
+  else if( dst->channels() > src->channels() ) {
+    memset( p_dst, 0, sizeof(double) * dst->channels() * dst->length() );
+    int d = dst->channels() - src->channels();
+    while( p_dst < max_dst ) {
+      double* max_tmp = p_dst + src->channels();
+      while( p_dst < max_tmp ) {
+        *p_dst++ = *p_src++;
+      }
+      p_dst += d;
+    }
+  }
+  else {
+    Q_ASSERT( false );
   }
 }
 
@@ -132,8 +148,9 @@ int OcaResampler::resample( const OcaFloatVector* in, OcaFloatVector* out, doubl
 
 void  OcaTrackWriter::write( const OcaFloatVector* src, double t, double rate )
 {
-  // TODO
-  Q_ASSERT( 1 == src->channels() );
+  if( m_channels != src->channels() ) {
+    init( src->channels() );
+  }
   OcaFloatVector resampled;
   if( m_track->getSampleRate() != rate ) {
     if( t != m_posSrc ) {
@@ -141,7 +158,7 @@ void  OcaTrackWriter::write( const OcaFloatVector* src, double t, double rate )
       m_posDst = t;
     }
     double ratio =  m_track->getSampleRate() / rate;
-    resampled.alloc( 1, src->length() * ratio + 1 );
+    resampled.alloc( m_channels, src->length() * ratio + 1 );
     int src_frames = resample( src, &resampled, ratio, 0 );
     Q_ASSERT( src_frames == src->length() );
     m_posSrc = t + src_frames / rate;
@@ -152,7 +169,7 @@ void  OcaTrackWriter::write( const OcaFloatVector* src, double t, double rate )
   }
   if( ! src->isEmpty() ) {
     OcaDataVector src_d;
-    float_to_double( src, &src_d );
+    float_to_double( src, &src_d, m_track->getChannels() );
     m_posDst = m_track->setData( &src_d, m_posDst );
   }
 }

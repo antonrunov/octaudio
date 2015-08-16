@@ -48,7 +48,7 @@ class OcaResampler
 class OcaTrackWriter : public OcaResampler
 {
   public:
-    OcaTrackWriter( OcaTrack* track ) : m_track( track ) { init(1); }
+    OcaTrackWriter( OcaTrack* track ) : m_track( track ) {}
 
   public:
     void  write( const OcaFloatVector* src, double t, double rate );
