@@ -255,14 +255,12 @@ void OcaTrackDataBlock::writeAvgChunks( long ofs, const OcaAvgVector* avg, int o
 
   order++;
   const OcaAvgData* v = avg->constData();
-  int last_size = 0;
   while( 0 < len ) {
     OcaAvgVector* dst_v = &dst[block_idx];
     int l = qMin( len, s_CHUNK_SIZE - idx0 );
-    if( dst_v->length() < idx0 + l ) {
+    if( ( dst_v->length() < idx0 + l ) || truncate ) {
       dst_v->setLength( idx0 + l );
     }
-    last_size = idx0 + l;
     memcpy( dst_v->data() + idx0 * m_channels, v, l * sizeof(OcaAvgData) * m_channels );
     if( order < s_AVG_MAX_DEPTH ) {
       avg_idx += calcAvg2( avg2.data() + avg_idx * m_channels, dst_v, idx0, l );
@@ -279,9 +277,6 @@ void OcaTrackDataBlock::writeAvgChunks( long ofs, const OcaAvgVector* avg, int o
   if( truncate ) {
     while( dst.size() > block_idx_end + 1 ) {
       dst.removeLast();
-    }
-    if( 0 < last_size ) {
-      dst[block_idx_end].setLength( last_size );
     }
   }
 
