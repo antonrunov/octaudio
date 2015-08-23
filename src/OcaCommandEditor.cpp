@@ -45,19 +45,26 @@ class OcaSyntaxHighlighter : public QSyntaxHighlighter
       int m_i1;
       int m_i2;
     };
-    QList<StringInfo> m_strings;
+    struct Data : public QTextBlockUserData {
+        QList<StringInfo> m_strings;
+    };
 };
 
 // -----------------------------------------------------------------------------
 
 bool OcaSyntaxHighlighter::getStringInfo( int idx, int& i1, int &i2 )
 {
-  for( int i = 0; i < m_strings.size(); i++ ) {
-    StringInfo info = m_strings.at(i);
-    if( ( info.m_i1 <= idx ) && ( info.m_i2 >= idx-1 ) ) {
-      i1 = info.m_i1;
-      i2 = info.m_i2;
-      return true;
+  QTextBlock tb = document()->findBlock( idx );
+  Data* data = static_cast<Data*>( tb.userData() );
+  if( NULL != data ) {
+    int i0 = tb.position();
+    for( int i = 0; i < data->m_strings.size(); i++ ) {
+      StringInfo info = data->m_strings.at(i);
+      if( ( i0 + info.m_i1 <= idx ) && ( i0 + info.m_i2 >= idx-1 ) ) {
+        i1 = i0 + info.m_i1;
+        i2 = i0 + info.m_i2;
+        return true;
+      }
     }
   }
   return false;
@@ -69,14 +76,24 @@ void OcaSyntaxHighlighter::highlightBlock( const QString &text )
 {
   QTextCharFormat stringFormat;
   stringFormat.setForeground( QColor(0xaa0000) );
-  int start = -1;
-  QChar ch = 0;
-  m_strings.clear();
+  int start = 0;
+  int ds = 0;
+  QChar ch = qMax( 0, previousBlockState() );
+
+  Data* data = static_cast<Data*>( currentBlockUserData() );
+  if( NULL == data ) {
+    data = new Data;
+    setCurrentBlockUserData( data );
+  }
+  else {
+    data->m_strings.clear();
+  }
   for( int i = 0; i < text.length(); i++ ) {
-    if( -1 == start ) {
+    if( 0 == ch.unicode() ) {
       if( '"' == text[i] ) {
         start = i;
         ch = '"';
+        ds = 1;
       }
       if( '\'' == text[i] ) {
         if( 0 < i ) {
@@ -88,6 +105,7 @@ void OcaSyntaxHighlighter::highlightBlock( const QString &text )
         }
         start = i;
         ch = '\'';
+        ds = 1;
       }
     }
     else if( text[i] == ch ) {
@@ -97,7 +115,7 @@ void OcaSyntaxHighlighter::highlightBlock( const QString &text )
       }
       else {
         setFormat( start, i-start+1, stringFormat);
-        m_strings.append( StringInfo( start+1, i-1 ) );
+        data->m_strings.append( StringInfo( start+ds, i-1 ) );
         //fprintf( stderr, "highlightBlock: str: %d - %d\n", start+1, i-1 );
         start = -1;
         ch = 0;
@@ -107,11 +125,12 @@ void OcaSyntaxHighlighter::highlightBlock( const QString &text )
       i++;
     }
   }
-  if( -1 != start ) {
+  if( 0 != ch.unicode() ) {
     setFormat( start, text.length()-start, stringFormat);
-    m_strings.append( StringInfo( start+1, text.length()-1 ) );
+    data->m_strings.append( StringInfo( start+ds, text.length()-1 ) );
     //fprintf( stderr, "highlightBlock: string: %d - %d\n", start+1, text.length()-1 );
   }
+  setCurrentBlockState( ch.unicode() );
 }
 
 
