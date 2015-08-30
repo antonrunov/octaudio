@@ -213,9 +213,13 @@ static octave_value get_oca_property( QObject* obj, const std::string& prop_name
                                                                 QObject* obj_aux  )
 {
   octave_value result;
-  QVariant val = obj->property( OCA_STR(prop_name) );
-  if( ( NULL != obj_aux ) && ( ! val.isValid() ) ) {
+  QVariant val;
+
+  if( NULL != obj_aux ) {
     val = obj_aux->property( OCA_STR(prop_name) );
+  }
+  if( ! val.isValid() ) {
+    val = obj->property( OCA_STR(prop_name) );
   }
   result = qvariant_to_octave_value( val );
   return result;
@@ -399,12 +403,18 @@ static bool set_oca_property( QObject* obj, const std::string& prop,
                                             octave_value val, QObject* obj_aux )
 {
   bool result = false;
-  const QMetaObject* meta_object = obj->metaObject();
-  int i = meta_object->indexOfProperty( OCA_STR( prop ) );
-  if( ( NULL != obj_aux ) && ( -1 == i ) ) {
-    obj = obj_aux;
+  const QMetaObject* meta_object = NULL;
+  int i = -1;
+  if( NULL != obj_aux ) {
+    meta_object = obj_aux->metaObject();
+    i = meta_object->indexOfProperty( OCA_STR( prop ) );
+  }
+  if( -1 == i ) {
     meta_object = obj->metaObject();
     i = meta_object->indexOfProperty( OCA_STR( prop ) );
+  }
+  else {
+    obj = obj_aux;
   }
 
   if( -1 != i ) {
