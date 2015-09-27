@@ -97,6 +97,14 @@ set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall" )
 
 mark_as_advanced( CLEAR CMAKE_VERBOSE_MAKEFILE )
 
+find_program( MARKED_EXECUTABLE marked )
+find_program( SED_EXECUTABLE sed )
+if( MARKED_EXECUTABLE AND SED_EXECUTABLE )
+  option( OCTAUDIO_BUILD_HTMLDOC "build html documentation" ON )
+else()
+  set( OCTAUDIO_BUILD_HTMLDOC OFF )
+endif()
+mark_as_advanced( MARKED_EXECUTABLE SED_EXECUTABLE )
 
 # Platform specific config
 set( DOC_PREFIX "doc/octaudio/" )
@@ -290,10 +298,27 @@ endif()
 #  endif()
 #endif()
 
+if( OCTAUDIO_BUILD_HTMLDOC )
+  foreach( fpath "overview" "commands" "tour" "../README" )
+    get_filename_component( fname ${fpath} NAME )
+    add_custom_command( OUTPUT "htmldoc/${fname}.html"
+      COMMAND cmake -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/htmldoc"
+      COMMAND ${SED_EXECUTABLE} -e "'s/\\.md/.html/'" -e "'s!(doc/!(!'"
+              "${CMAKE_CURRENT_SOURCE_DIR}/doc/${fpath}.md"
+              | ${MARKED_EXECUTABLE} --gfm -o "${CMAKE_CURRENT_BINARY_DIR}/htmldoc/${fname}.html"
+      DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/doc/${fpath}.md" )
+    list( APPEND htmldoc_files "${CMAKE_CURRENT_BINARY_DIR}/htmldoc/${fname}.html" )
+  endforeach()
+  add_custom_target( htmldoc ALL DEPENDS ${htmldoc_files} )
+endif()
+
 install( TARGETS "octaudio" RUNTIME DESTINATION "bin" BUNDLE DESTINATION "." )
 install( DIRECTORY "scripts/utils" "scripts/core" DESTINATION "${SHARE_PREFIX}share/octaudio/m" FILES_MATCHING PATTERN "*.m" )
 install( FILES "scripts/startup/octaudiorc" DESTINATION "${SHARE_PREFIX}share/octaudio/m/startup" )
-install( FILES "doc/octaudio_readme.txt" "doc/install.txt" "COPYING" DESTINATION "${DOC_PREFIX}" )
+install( FILES "doc/build.txt" "doc/install.txt" "doc/shortcuts.txt" "COPYING" DESTINATION "${DOC_PREFIX}" )
+if( OCTAUDIO_BUILD_HTMLDOC )
+install( FILES ${htmldoc_files} DESTINATION "${DOC_PREFIX}" )
+endif()
 
 if( WIN32 )
   install( PROGRAMS "setup/octaudio.bat" DESTINATION "." )

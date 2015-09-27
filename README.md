@@ -5,6 +5,17 @@ simultaneous use of Octave and Audacity (or a similar audio editor) is your comm
 layout, Octaudio might be a tool for you. It can also be useful for the studying of the
 DSP and audio processing.
 
+The main point of Octaudio is a combination of a WYSIWYG audio editing with a command or
+scripting mode. It is somewhat like the Vi for audio. You can easily navigate, view,
+record and listen to audio data, select tracks and data regions, and then execute octave
+commands or scripts to analyze, process, or modify selected (or any other) data. You can
+also record intermediate data or metrics of the processing into separate tracks to get
+the detailed picture of the process or the analysis results. Finally, you can write
+complex octave scripts to fully automate the operations. A script can prepare data,
+create and configure all necessary tracks, perform actual processing, analyze the
+results, and display all that stuff in a convenient form with a single command. Surely
+one can use the existing octave or matlab code directly in Octaudio.
+
 ##### Features
 
 - Runs on GNU/Linux, Mac OS X, and MS Windows, and can be compiled for the other
@@ -27,7 +38,13 @@ DSP and audio processing.
 - Tracks can be marked as non-audible to be completely ignored during playback (useful
   for average values, control signals, etc.).
 
-See more information and screenshots on [Octaudio wiki](https://github.com/antonrunov/octaudio/wiki).
+##### More Resources
+
+- [General Overview](doc/overview.md)
+- [Quick Tour](doc/tour.md)
+- [Command Reference](doc/commands.md)
+- [Shortcuts](doc/shortcuts.txt)
+- See more information and screenshots on [Octaudio wiki](https://github.com/antonrunov/octaudio/wiki).
 
 
 ##### Installing

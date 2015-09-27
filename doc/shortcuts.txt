@@ -1,0 +1,88 @@
+  Octaudio Shortcuts
+  ==================
+
+- Global
+    Ctrl+T                  - add group
+    Ctrl+Shift+T            - open new group dialog
+    Ctrl+W                  - delete active group
+    Ctrl+G                  - open group properties
+    Ctrl+PgDown, Ctrl+PgUp  - next / previous group
+    Ctrl+Shift+A            - clear time region
+    Ctrl+`                  - hide console
+    Ctrl+1                  - show and focus console
+    Ctrl+2                  - focus data view
+    Alt+A                   - center view on audio position
+    Alt+Shift+M             - open new monitor dialog
+    Ctrl+N                  - add track
+    Ctrl+Shift+N            - open new track dialog
+    Alt+Shift+S             - open new smart track dialog
+    Ctrl+K                  - delete active track
+    Ctrl+Shift+K            - delete selected tracks
+    Alt+Shift+H             - hide active track
+    Ctrl+Shift+H            - hide selected tracks
+    Ctrl+I                  - toggle track selection
+    Ctrl+P                  - open active track properties dialog
+    Ctrl+Shift+P            - start playback
+    Ctrl+Shift+R            - start recording
+    Ctrl+Shift+Space        - pause audio
+    Ctrl+Shift+S            - stop audio
+
+- Console
+    Enter, Return           - evaluate command
+    Shift+Enter             - new line
+    Shift+Esc               - clear command editor
+    Ctrl+Up                 - open command history
+    Tab                     - show completions
+    Ctrl+Z                  - undo
+    Ctrl+Shift+Z            - redo
+    Ctrl+A                  - select all
+    Ctrl+C                  - copy
+    Ctrl+V                  - paste
+    Ctrl+X                  - cut
+
+- Data View
+    Ctrl+U, Ctrl+D                    - move track up / down
+    Up, Down                          - next / previous track
+    Home                              - set cursor and view to the group start
+    End                               - set cursor and view to the group end
+    Ctrl+Up, Ctrl+Down                - change time scale
+    Left, Right                       - move cursor
+    Ctrl+Left, Ctrl+Right             - move cursor (fine)
+    Shift+Left, Shift+Right           - move view position
+    Alt+Shift+Left, Alt+Shift+Right   - move view position (fast)
+    Ctrl+Shift+Left, Ctrl+Shift+Right - move view position (fine)
+    Ctrl+[, Ctrl+]                    - move cursor by 1 sample
+    Alt+[, Alt+]                      - move cursor and view
+    Alt+Shift+[, Alt+Shift+]          - move cursor and view (fast)
+
+    ScrollUp, ScrollDown              - vertical scroll
+    Ctrl+ScrollUp, Ctrl+ScrollDown    - change time scale
+    Shift+ScrollUp, Shift+ScrollDown  - change vertical scale
+
+    ScrollLeft, ScrollRight                       - move view position
+    Shift+ScrollLeft, Shift+ScrollRight           - move view position (fast)
+    Alt+Shift+ScrollLeft, Alt+Shift+ScrollRight   - move view position (fine)
+
+    Ctrl+ScrollLeft, Ctrl+ScrollRight             - move cursor and view
+    Ctrl+Shift+ScrollLeft, Ctrl+Shift+ScrollRight - move cursor and view (fast)
+    Ctrl+Alt+ScrollLeft, Ctrl+Alt+ScrollRight     - move cursor and view (fine)
+
+    Shift+Up, Shift+Down              - change vertical scale
+    Alt+Up, Alt+Down                  - change zero offset
+
+    Alt+N, Alt+P                      - next / previous subtrack (in smart track)
+
+- Scale Control
+    Click                             - take focus
+    Esc                               - abandon focus
+    Up, Down                          - change value
+    Shift+Up, Shift+Down              - change value (fast)
+    Ctrl+Up, Ctrl+Down                - change value (fine)
+    ScrollUp, ScrollDown              - change value
+    Sift+ScrollUp, Shift+ScrollDown   - change value (fast)
+    Ctrl+ScrollUp, Ctrl+ScrollDown    - change value (fine)
+
+- Monitor
+    ScrollUp, ScrollDown              - move cursor and view
+    Ctrl+ScrollUp, Ctrl+ScrollDown    - change time scale
+    Shift+ScrollUp, Shift+ScrollDonw  - change vertical scale
