@@ -470,6 +470,7 @@ oca_index OcaTrackGroup::removeTrack( OcaTrackBase* track )
         m_recordingTrack2 = NULL;
         flags_active |= e_FlagRecordingTracksChanged;
       }
+      flags_active |= updateDuration();
       Q_ASSERT( track != m_activeTrack );
     }
     else {
