@@ -26,5 +26,5 @@ function oca_savewav( filename, track=0 )
   if 0 == length(x)
     error( "empty track" );
   end
-  wavwrite( x, fs, filename );
+  wavwrite( x', fs, filename );
 endfunction
