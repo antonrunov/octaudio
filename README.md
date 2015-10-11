@@ -24,6 +24,7 @@ one can use the existing octave or matlab code directly in Octaudio.
   scale in both directions.
 - Track groups that are switched with tabs.
 - Double precision arithmetics for all data including time and sample rate values.
+- Multichannel tracks.
 - Two displaying modes (Normal and Abs Value) for both zero centered (like audio data)
   and positive (amplitude, power, etc.) signals.
 - Hide or Show track option.
@@ -74,3 +75,4 @@ list of the main issues.
 - Missing undo/redo functions.
 - UI functionality is insufficient sometimes, especially for monitors and multiple track
   selection.
+- Multichannel track support is still at the basic level.

@@ -48,22 +48,26 @@ Below is a full list of data commands.
 ```
   [data, t0] = oca_data_get( [t_spec], [id], [group_id] )
 ```
-Read the track data as a numeric array. `id` is the track id, and `group_id`
-specifies the container (group) for the track. The second returned value, `t0` is
-the actual time of the first returned sample.
+Read the track data as a numeric array with the channels represented as rows.
+`id` is the track id, and `group_id` specifies the container (group) for the
+track. The second returned value, `t0` is the actual time of the first returned
+sample.
 
 This command always returns a single data block. It means that all samples in the
 returned array are equally spaced and their times are `t0 + [0:n-1] / sample_rate`.
 If there are several data blocks in the specified region, `oca_data_get` will
-return only the first one.
+return only the first one. Use `oca_data_getblocks` to get all blocks in the region.
 ```
   t_next = oca_data_set( t, data, [id], [group_id] )
 ```
-Write numeric array data to the track, starting with the time t. If the track
-already contains a data block at the time t, the nearest existing sample will be
-overwritten with data(1) and so on. Otherwise the new data block starting with
-time t will be created. The command returns the time of the sample (not necessary
-existing) following the last written sample. Thus the sequential commands
+Write the numeric array `data` to the track, starting with the time t.  If the
+track has a single channel, the data must be a vector. For multichannel tracks
+the data must be a matrix with the rows corresponding to the track channels.
+If the track already contains a data block at the time t, the nearest existing
+sample will be overwritten with data(1) and so on. Otherwise the new data block
+starting with time t will be created. The command returns the time of the
+sample (not necessary existing) following the last written sample. Thus the
+sequential commands
 ```
     t = oca_data_set( t, data1 );
     t = oca_data_set( t, data2 );
@@ -184,13 +188,17 @@ Handle track properties. The following properties are defined for all tracks:
 - "hidden", boolean flag
 - "index" (read only), the track index in the group
 - "height", the track height in pixels
+
 Properties, specific for the data tracks:
 - "muted", boolean flag
 - "readonly", boolean flag
 - "rate", track data sample rate in Hz, double
+- "channels", the number of channels in the track; this property can be changed
+  only when the track is empty
 - "audible", boolean flag
 - "gain", gain for audio mixing, double
 - "stereo_pan", pan for audio mixing, valid range is from -1.0 (left) to 1.0 (right)
+
 Properties, specific for the smart tracks:
 - "common_scale", boolean, true if all subtracks are displayed with the same scale
 - "active_subtrack", active subtrack ID
@@ -399,10 +407,11 @@ There are a few useful utility scripts, bundled with Octaudio. These
 scripts are located at `OCTAUDIO_PREFIX/share/octaudio/m/utils/` directory.
 
 ```
-  oca_loadwav( filename, [track] )
+  oca_loadwav( filename, [track], [mono] )
 ```
 Load a data from the wav file to the specified track, or create a new one if the
-track is not specified. Multichannel audio is mixed into a single channel.
+track is not specified. When `mono=true` is specified, multichannel
+audio is mixed into a single channel.
 
 ```
   oca_loadwavm( filename, [basename] )

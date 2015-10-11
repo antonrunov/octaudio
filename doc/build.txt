@@ -8,6 +8,7 @@
   - Qt4 - http://download.qt.io/archive/qt
   - Portaudio V19 - http://www.portaudio.com
   - libsamplerate - http://www.mega-nerd.com/SRC
+  - marked (optional), for generating html docs - https://github.com/chjj/marked
 
 - General Instructions
 
@@ -23,11 +24,35 @@
   - Build
       make
       make install
+  - Please note that the installation step is required for working Octaudio setup.
+    Otherwise Octaudio will not be able to find its startup script and some components.
 
-- MS Windows note
+- Building for MS Windows
 
-  You should use the same (or compatible) compiler for all libraries (including Octave)
-  and Octaudio itself. Thus if you want to use pre-compiled Octave binaries, you should
-  use the corresponding compiler to build both Octaudio and all other libraries. For
-  example, to build Octaudio for the MinGW Octave distribution, the
-  Octave3.6.4_gcc4.6.2/mingw/bin/g++.exe compiler should be used.
+  There are two ways to build Octaudio for Windows. The first is a cross-compilation with
+  MXE-Octave toolchain which is also an official way to build Octave binaries for Windows.
+  The second way is to compile Octaudio natively on Windows with the mingw
+  compiler bundled with Octave binary distribution.
+
+  Almost all required libraries binaries (except libsamplerate) are bundled with
+  Octave-4.0 distribution and can be just used for buiding Octaudio, but one still needs
+  to build Qt4 to get the qmake utility.
+
+  - Using MXE-Octave
+    - See http://wiki.octave.org/Windows_Installer for instructions to set up
+      MXE-Octave toolchain.
+    - It is not necessary to build the whole Octave target as one can use pre-compiled
+      libraries from Octave distribution. But you need to build at least qt and libsamplerate.
+    - Use usr/i686-w64-mingw32/share/cmake/mxe-conf.cmake file as CMake toolchain file
+      and specify custom qt variables (replace /PATH_TO_MXE/ below with the actual path)
+        cmake -DCMAKE_TOOLCHAIN_FILE=/PATH_TO_MXE/usr/i686-w64-mingw32/share/cmake/mxe-conf.cmake \
+              -DQT_QMAKE_EXECUTABLE=/PATH_TO_MXE/usr/bin/i686-w64-mingw32-qmake \
+              -DQT_MOC_EXECUTABLE=/PATH_TO_MXE/usr/bin/i686-w64-mingw32-moc \
+              -DQT_UIC_EXECUTABLE=/PATH_TO_MXE/usr/bin/i686-w64-mingw32-uic \
+              -DQT_RCC_EXECUTABLE=/PATH_TO_MXE/usr/bin/i686-w64-mingw32-rcc ...
+    - Buld Octaudio according to the general instructions above.
+
+  - To build natively you need to compile Qt4 and libsamplerate with the
+    i686-w64-mingw32-gcc compiler bundled with Octave. Then you can build Octaudio with
+    the same compiler following the general instructions above.
+
