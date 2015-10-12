@@ -27,6 +27,7 @@ class OcaTrackGroup;
 class OcaValidatorDouble;
 class QCheckBox;
 class QDoubleSpinBox;
+class QComboBox;
 
 class OcaDialogPropertiesTrack : public OcaDialogPropertiesBase
 {
@@ -44,6 +45,7 @@ class OcaDialogPropertiesTrack : public OcaDialogPropertiesBase
     void onSampleRateChanged();
     void onGainChanged( double value );
     void onPanChanged( double value );
+    void onChannelsChanged( const QString& value);
 
   protected:
     OcaTrack*     m_track;
@@ -55,6 +57,7 @@ class OcaDialogPropertiesTrack : public OcaDialogPropertiesBase
     QCheckBox*          m_chkAudible;
     QDoubleSpinBox*     m_regGain;
     QDoubleSpinBox*     m_regStereoPan;
+    QComboBox*          m_cmbChannels;
     // TODO
     // stereo
 };

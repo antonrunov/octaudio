@@ -41,6 +41,7 @@ OcaDialogPropertiesTrack::OcaDialogPropertiesTrack( OcaTrack* track,
                     | OcaTrack::e_FlagStereoPanChanged
                     | OcaTrack::e_FlagAudibleChanged
                     | OcaTrack::e_FlagStereoPanChanged
+                    | OcaTrack::e_FlagChannelsChanged
                     | OcaTrack::e_FlagReadonlyChanged;
 
   createListener( m_track, mask );
@@ -91,6 +92,18 @@ OcaDialogPropertiesTrack::OcaDialogPropertiesTrack( OcaTrack* track,
   layout->addWidget( m_regStereoPan, row, 1 );
   connect( m_regStereoPan, SIGNAL(valueChanged(double)), SLOT(onPanChanged(double)) );
 
+  m_cmbChannels = new QComboBox( this );
+  m_cmbChannels->setEditable( true );
+  m_cmbChannels->setValidator( new QIntValidator( 1, 32768 ) );
+  for( int i = 1; i <= 8; i++ ) {
+    m_cmbChannels->addItem( QString::number(i) );
+  }
+  m_cmbChannels->setInsertPolicy( QComboBox::NoInsert );
+  layout->addWidget( new QLabel( "Channels" ), ++row, 0 );
+  layout->addWidget( m_cmbChannels, row, 1 );
+  connect( m_cmbChannels, SIGNAL(editTextChanged(const QString&)),
+                          SLOT(onChannelsChanged(const QString&)) );
+
   if( NULL != m_group ) {
     m_listener->addObject( m_group, 0 );
     QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok
@@ -137,6 +150,16 @@ void OcaDialogPropertiesTrack::onUpdateRequired( uint flags )
   m_regStereoPan->blockSignals( true );
   m_regStereoPan->setValue( m_track->getStereoPan() );
   m_regStereoPan->blockSignals( false );
+  int ch = m_track->getChannels();
+  if( ch <= m_cmbChannels->count() ) {
+    m_cmbChannels->setCurrentIndex( ch - 1 );
+  }
+  else {
+    m_cmbChannels->setCurrentIndex( -1 );
+    m_cmbChannels->setEditText( QString::number( ch ) );
+  }
+  m_regStereoPan->setEnabled( 1 == ch );
+  m_cmbChannels->setEnabled( 0.0 == m_track->getDuration() );
 }
 
 // -----------------------------------------------------------------------------
@@ -158,6 +181,13 @@ void OcaDialogPropertiesTrack::onGainChanged( double value )
 void OcaDialogPropertiesTrack::onPanChanged( double value )
 {
   m_track->setStereoPan( value );
+}
+
+// -----------------------------------------------------------------------------
+
+void OcaDialogPropertiesTrack::onChannelsChanged( const QString& value)
+{
+  m_track->setChannels( value.toUInt() );
 }
 
 // -----------------------------------------------------------------------------
