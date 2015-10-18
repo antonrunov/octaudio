@@ -33,7 +33,7 @@ class OcaTrackDataBlock;
 
 typedef OcaBlockList<OcaDataVector>  OcaBlockListData;
 typedef OcaBlockList<OcaAvgVector>   OcaBlockListAvg;
-typedef QList< QPair<double,long> >  OcaBlockListInfo;
+typedef QList< QPair<double,qint64> >  OcaBlockListInfo;
 
 class OcaTrack : public OcaTrackBase
 {
@@ -119,8 +119,8 @@ class OcaTrack : public OcaTrackBase
     QMap<double,OcaTrackDataBlock*>::const_iterator findBlock( double t0,
                                                                 bool bottom_allowed  ) const;
     struct Range {
-      long start;
-      long end;
+      qint64 start;
+      qint64 end;
       bool isValid() const { return ( 0 < end ); }
     };
     Range getRange( const OcaTrackDataBlock* block, double dt, double duration ) const;

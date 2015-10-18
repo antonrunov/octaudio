@@ -19,7 +19,11 @@
 
 #include "OcaTrack.h"
 
-#include "OcaTrackDataBlock.h"
+#ifdef OCA_USE_FS_DATABLOCK
+# include "OcaTrackDataBlockFS.h"
+#else
+# include "OcaTrackDataBlock.h"
+#endif
 
 #include <QtCore>
 
@@ -327,7 +331,8 @@ void OcaTrack::DstWrapper::addBlock( OcaTrackDataBlock* block, const Range& r, d
       }
       else if ( NULL != m_avg ) {
         OcaAvgVector* out_avg = new OcaAvgVector;
-        long len = block->readAvg( out_avg,  m_decimation, r.start, r.end - r.start );
+        long len = block->readAvg( out_avg,  m_decimation, r.start,
+                                 ( r.end - r.start - 1 ) / m_decimation + 1 );
         if( 0 < len ) {
           m_avg->appendBlock( t, out_avg );
         }
@@ -338,7 +343,7 @@ void OcaTrack::DstWrapper::addBlock( OcaTrackDataBlock* block, const Range& r, d
       }
       else {
         Q_ASSERT( NULL != m_info );
-        m_info->append( QPair<double,long>( t, r.end - r.start ) );
+        m_info->append( QPair<double,qint64>( t, r.end - r.start ) );
       }
     }
 }
@@ -419,7 +424,7 @@ double OcaTrack::setData( const OcaDataVector* src, double t0, double duration /
 
       QMap<double,OcaTrackDataBlock*>::const_iterator it0 = findBlock( t0, true );
       OcaTrackDataBlock* block_dst = NULL;
-      long idx0 = 0;
+      qint64 idx0 = 0;
 
       if( m_blocks.constEnd() != it0 ) {
         QMap<double,OcaTrackDataBlock*>::iterator it = m_blocks.find( it0.key() );
@@ -467,12 +472,12 @@ double OcaTrack::setData( const OcaDataVector* src, double t0, double duration /
         Q_ASSERT( block_dst->getChannels() == m_channels );
       }
 
-      long len = 0;
+      qint64 len = 0;
       if( fill ) {
         OcaDataVector* src_fill = NULL;
-        long rem = floor( t0 + duration * m_sampleRate - t00 + Oca_TIME_TOLERANCE );
+        qint64 rem = floor( t0 + duration * m_sampleRate - t00 + Oca_TIME_TOLERANCE );
         long len_pat = src->length();
-        long k = ( qMin( rem, 0x10000l ) - 1 ) /len_pat  + 1;
+        long k = ( qMin( rem, 0x10000ll ) - 1 ) /len_pat  + 1;
         if( 1 < k ) {
           src_fill = new OcaDataVector( m_channels, k * len_pat );
           double* p = src_fill->data();
@@ -484,7 +489,7 @@ double OcaTrack::setData( const OcaDataVector* src, double t0, double duration /
           len_pat = src->length();
         }
         while( 0 < rem ) {
-          long l = block_dst->write( src, idx0, qMin( rem, len_pat ) );
+          long l = block_dst->write( src, idx0, qMin( rem, (qint64)len_pat ) );
           len += l;
           rem -= l;
           idx0 += l;
@@ -738,7 +743,7 @@ QMap<double,OcaTrackDataBlock*>::const_iterator OcaTrack::findBlock( double t0,
   QMap<double,OcaTrackDataBlock*>::const_iterator next = m_blocks.lowerBound( t0 - Oca_TIME_TOLERANCE );
   if( isfinite( t0 ) && ( m_blocks.begin() != next ) ) {
     next--;
-    long len = next.value()->getLength();
+    qint64 len = next.value()->getLength();
     if( bottom_allowed ) {
       len++;
     }
