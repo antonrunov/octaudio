@@ -601,6 +601,7 @@ void OcaTrackGroupView::onUpdateRequired(   uint flags,
         s->move( getTrackMargin(), h + 2 );
         s->resize( getTrackWidth(), m_group->getTrackHeight( t ) );
         h += s->height() + 5;
+        s->setVisible( isTrackVisible( s ) );
       }
       else {
         s->hide();
@@ -701,6 +702,28 @@ QRect OcaTrackGroupView::getTrackFrameRect( const OcaTrackBase* track ) const
 
 // ------------------------------------------------------------------------------------
 
+void OcaTrackGroupView::checkVisibleTracks()
+{
+  for( uint idx = 0; idx < m_screens.getLength(); ++idx ) {
+    OcaDataScreen* ws = NULL;
+    OcaTrackBase* w = m_screens.getItem( idx, &ws );
+    Q_ASSERT( NULL != ws );
+    if( ! w->isHidden() ) {
+      ws->setVisible( isTrackVisible( ws ) );
+    }
+  }
+}
+
+// ------------------------------------------------------------------------------------
+
+bool OcaTrackGroupView::isTrackVisible( OcaDataScreen* s )
+{
+  int y = m_widget->mapTo( viewport(), s->pos() ).y();
+  return ( 0 <= y + s->height() ) && ( viewport()->height() > y );
+}
+
+// ------------------------------------------------------------------------------------
+
 OcaDataScreen* OcaTrackGroupView::createScreen( OcaTrackBase* track )
 {
   OcaDataScreen* s = NULL;
@@ -736,6 +759,7 @@ void OcaTrackGroupView::resizeEvent( QResizeEvent* event )
     m_group->setView( t0, t0 + m_timeScale * getTrackWidth() );
   }
   updateTimeScrollBar();
+  checkVisibleTracks();
 }
 
 // ------------------------------------------------------------------------------------
@@ -747,6 +771,7 @@ void OcaTrackGroupView::scrollContentsBy( int dx, int dy )
   }
   if( 0 != dy ) {
     m_widget->move( 0, -verticalScrollBar()->value() );
+    checkVisibleTracks();
   }
 }
 

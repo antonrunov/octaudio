@@ -199,6 +199,8 @@ OcaDataScreen::OcaDataScreen( OcaTrackBase* track, OcaTrackGroup* group )
   m_group( group ),
   m_label( NULL ),
   m_active( false ),
+  m_postponedFlags( 0 ),
+  m_postponedGroupFlags( 0 ),
   m_listener( NULL ),
   m_viewPosition( 0.0 ),
   m_timeScale( 1.0 ),
@@ -381,7 +383,15 @@ void OcaDataScreen::onUpdateRequired( uint flags, QHash<QString,uint>&, QList<Oc
     updateHandlePalette();
   }
 
-  updateTrackData( flags, group_flags );
+  if( isVisible() ) {
+    updateTrackData( flags, group_flags );
+    m_postponedFlags = 0;
+    m_postponedGroupFlags = 0;;
+  }
+  else {
+    m_postponedFlags |= flags;
+    m_postponedGroupFlags |= group_flags;
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -522,6 +532,18 @@ void OcaDataScreen::dropEvent( QDropEvent* event )
         m_group->moveTrack( t, idx );
       }
     }
+  }
+}
+
+// -----------------------------------------------------------------------------
+
+void OcaDataScreen::showEvent( QShowEvent * event )
+{
+  QWidget::showEvent( event );
+  if( ( 0 != m_postponedFlags ) || ( 0 != m_postponedGroupFlags ) ) {
+    updateTrackData( m_postponedFlags, m_postponedGroupFlags );
+    m_postponedFlags = 0;
+    m_postponedGroupFlags = 0;;
   }
 }
 

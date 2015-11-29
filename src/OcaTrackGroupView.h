@@ -171,6 +171,8 @@ class OcaTrackGroupView : public QAbstractScrollArea
   protected:
     OcaDataScreen* createScreen( OcaTrackBase* track );
     QRect getTrackFrameRect( const OcaTrackBase* track ) const;
+    void  checkVisibleTracks();
+    bool  isTrackVisible( OcaDataScreen* s );
 
   protected:
     virtual void resizeEvent( QResizeEvent* event );

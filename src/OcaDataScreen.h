@@ -54,6 +54,7 @@ class OcaDataScreen : public QWidget
     virtual void wheelEvent( QWheelEvent* event );
     virtual void dragEnterEvent( QDragEnterEvent* event );
     virtual void dropEvent( QDropEvent* event );
+    virtual void showEvent( QShowEvent * event );
 
     //virtual void keyPressEvent( QKeyEvent* key_event );
     //virtual void enterEvent( QEvent* event );
@@ -149,6 +150,8 @@ class OcaDataScreen : public QWidget
     OcaTrackGroup*        m_group;
     QLabel*               m_label;
     bool                  m_active;
+    int                   m_postponedFlags;
+    int                   m_postponedGroupFlags;
 
   protected:
     OcaObjectListener*  m_listener;
