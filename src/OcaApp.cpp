@@ -27,6 +27,9 @@
 #include "OcaObjectListener.h"
 
 #include <QtCore>
+#include <QtNetwork>
+
+static const char* SESSION_FILE_HEADER = "#Octaudio session file v.0. Don't edit!\n";
 
 // -----------------------------------------------------------------------------
 
@@ -71,9 +74,35 @@ OcaApp::~OcaApp()
 
     delete m_octaveController;
     m_octaveController = NULL;
+    m_sessionFile.remove();
   }
   Q_ASSERT( m_listRemoved.isEmpty() );
   fprintf( stderr, "OcaApp::~OcaApp - %d objects\n", m_objects.size() );
+}
+
+// -----------------------------------------------------------------------------
+
+bool OcaApp::removeDirRecursively( const QString& path )
+{
+  QDir dir( path );
+  bool result = false;
+  if( dir.exists() ) {
+    dir.setFilter( QDir::AllEntries | QDir::NoDotAndDotDot );
+    QDirIterator it( dir );
+    while (it.hasNext()) {
+      it.next();
+      if( it.fileInfo().isDir() ) {
+        removeDirRecursively( it.filePath() );
+      }
+      else {
+        //fprintf( stderr, "OcaApp::removeDirRecursively: remove file: %s\n", it.fileName().toLocal8Bit().data() );
+        dir.remove( it.fileName() );
+      }
+    }
+    //fprintf( stderr, "OcaApp::removeDirRecursively: %s\n", path.toLocal8Bit().data() );
+    result = dir.rmdir( path );
+  }
+  return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -86,6 +115,53 @@ int OcaApp::run()
   m_audioController = new OcaAudioController();
 
   m_ocaInstance = new OcaInstance();
+
+  QString s = QDir::homePath() + "/.config/octaudio/sessions";
+  QDirIterator it( s, QDir::Files );
+  while (it.hasNext()) {
+    it.next();
+    QString id = it.fileName();
+    QLocalSocket client;
+    client.connectToServer( id );
+    if( ! client.waitForConnected(100) ) {
+      QFile f( it.filePath() );
+      if( f.open( QIODevice::ReadOnly ) ) {
+        QByteArray line = f.readLine();
+        if( line.isEmpty() ) {
+          bool r2 = f.remove();
+          fprintf( stderr, "removing empty stale session %s: %s\n",
+                                            id.toLocal8Bit().data(),
+                                          ( r2 ? "DONE" : "FAILED" )   );
+        }
+        else if( line != SESSION_FILE_HEADER ) {
+          fprintf( stderr, "skiping stale session of unknown format %s\n", id.toLocal8Bit().data() );
+        }
+        else {
+          fprintf( stderr, "removing stale session %s\n", id.toLocal8Bit().data() );
+          while( ! f.atEnd() ) {
+            QString cache_dir = f.readLine();
+            cache_dir = cache_dir.trimmed();
+            if( ! cache_dir.isEmpty() ) {
+              bool r1 = removeDirRecursively( cache_dir );
+              fprintf( stderr, "  %s: %s\n", r1 ? "OK" : "FAILED", cache_dir.toLocal8Bit().data() );
+            }
+          }
+          bool r2 = f.remove();
+          fprintf( stderr, "  %s\n", r2 ? "DONE" : "FAILED" );
+        }
+      }
+    }
+  }
+  QDir::current().mkpath( s );
+  m_sessionId = QUuid::createUuid().toString();
+  QLocalServer::removeServer( m_sessionId );
+  QLocalServer* server = new QLocalServer( this );
+  server->listen( m_sessionId );
+  s += "/" + m_sessionId;
+  m_sessionFile.setFileName( s );
+  m_sessionFile.open( QIODevice::WriteOnly );
+  m_sessionFile.write( SESSION_FILE_HEADER );
+  m_sessionFile.flush();
 
   m_listener = new OcaObjectListener( m_ocaInstance, OcaInstance::e_FlagALL, 10, this );
   connect(  m_listener,
@@ -216,6 +292,28 @@ int OcaApp::deleteQueuedObjects()
     m_gcTimer->start();
   }
   return result;
+}
+
+// -----------------------------------------------------------------------------
+
+QDir OcaApp::checkDataCacheDir()
+{
+  QString data_path = QString( "%1/data.%2" )
+      . arg( m_ocaInstance->getDataCacheBase() )
+      . arg( m_sessionId );
+
+  QDir dir = QDir::current();
+  dir.mkpath( data_path );
+  dir.cd( data_path );
+
+  QMutexLocker locker( &m_mutex );
+  if( m_dataCacheDir != dir ) {
+    m_dataCacheDir = dir;
+    m_sessionFile.write( QString("%1\n").arg(dir.canonicalPath()).toLocal8Bit() );
+    m_sessionFile.flush();
+  }
+
+  return dir;
 }
 
 // -----------------------------------------------------------------------------

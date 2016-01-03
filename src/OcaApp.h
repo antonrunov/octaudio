@@ -26,6 +26,7 @@
 #include <QMutex>
 #include <QHash>
 #include <QList>
+#include <QDir>
 
 class OcaInstance;
 class OcaOctaveController;
@@ -49,9 +50,11 @@ class OcaApp : public QApplication
     static OcaInstance* getOcaInstance() { return getSelf()->m_ocaInstance; }
     static OcaOctaveController* getOctaveController() { return getSelf()->m_octaveController; }
     static OcaAudioController*  getAudioController() { return getSelf()->m_audioController; }
+    static QDir getDataCacheDir() { return getSelf()->checkDataCacheDir(); }
 
   protected:
     static OcaApp* getSelf() { return qobject_cast<OcaApp*>( qApp ); }
+    static bool removeDirRecursively( const QString& path );
 
   protected:
     OcaInstance* m_ocaInstance;
@@ -67,6 +70,9 @@ class OcaApp : public QApplication
     bool      unregisterObject( OcaObject* obj );
 
   protected:
+    QDir checkDataCacheDir();
+
+  protected:
     OcaObjectListener*    m_listener;
 
     OcaOctaveController*  m_octaveController;
@@ -77,6 +83,10 @@ class OcaApp : public QApplication
     QHash<oca_ulong,OcaObject*>   m_objects;
     mutable QMutex                m_mutex;
     QTimer*                       m_gcTimer;
+
+    QFile   m_sessionFile;
+    QDir    m_dataCacheDir;
+    QString m_sessionId;
 
   private:
     oca_ulong   m_nextId;

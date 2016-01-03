@@ -35,12 +35,15 @@ class OcaInstance : public OcaObject
     void setWindow( OcaWindowData* window_data );
 
   public:
-    OcaWindowData* getWindowData() const { return m_mainWindowData; }
+    OcaWindowData*  getWindowData() const { return m_mainWindowData; }
+    QString         getDataCacheBase() const;
+    bool            setDataCacheBase( const QString& path );
 
   public:
     enum EFlags {
       e_FlagWindowAdded       = 0x001,
       e_FlagWindowRemoved     = 0x002,
+      e_FlagCachePathChanged  = 0x004,
 
       e_FlagObjectRemoved     = 0x100,
       e_FlagALL               = 0xfff,
@@ -51,6 +54,7 @@ class OcaInstance : public OcaObject
 
   private:
     OcaWindowData*            m_mainWindowData;
+    QString                   m_dataCacheBase;
 
 };
 

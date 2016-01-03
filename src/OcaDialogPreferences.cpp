@@ -81,6 +81,15 @@ OcaDialogPreferences::OcaDialogPreferences()
   layout->addWidget( new QLabel( "Audio Driver Sample Rate" ), ++row, 0 );
   layout->addWidget( m_editSampleRate, row, 1 );
 
+#ifdef OCA_USE_FS_DATABLOCK
+  m_listener->addObject( OcaApp::getOcaInstance(),
+                         OcaInstance::e_FlagCachePathChanged );
+  m_editDataCacheBase = new QLineEdit( this );
+  connect( m_editDataCacheBase, SIGNAL(editingFinished()), SLOT(setDataCache()) );
+  layout->addWidget( new QLabel( "Data Cache Directory" ), ++row, 0 );
+  layout->addWidget( m_editDataCacheBase, row, 1 );
+#endif
+
   OcaApp::getAudioController()->checkDevices();
 }
 
@@ -115,6 +124,9 @@ void OcaDialogPreferences::onUpdateRequired( uint flags )
   m_devInput->setCurrentIndex( idx );
   m_devInput->blockSignals( false );
 
+#ifdef OCA_USE_FS_DATABLOCK
+  m_editDataCacheBase->setText( OcaApp::getOcaInstance()->getDataCacheBase() );
+#endif
 }
 
 // -----------------------------------------------------------------------------
@@ -144,6 +156,15 @@ void OcaDialogPreferences::setOutputDevice( const QString& dev_name )
 {
   OcaApp::getAudioController()->setDevice( dev_name, false );
 }
+
+// -----------------------------------------------------------------------------
+
+#ifdef OCA_USE_FS_DATABLOCK
+void OcaDialogPreferences::setDataCache()
+{
+  OcaApp::getOcaInstance()->setDataCacheBase( m_editDataCacheBase->text() );
+}
+#endif
 
 // -----------------------------------------------------------------------------
 

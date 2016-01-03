@@ -29,6 +29,11 @@ OcaInstance::OcaInstance()
 :
   m_mainWindowData( NULL )
 {
+  m_dataCacheBase = QDir::tempPath() + "/octaudio";
+  QString s = QProcessEnvironment::systemEnvironment().value("USER");
+  if( ! s.isEmpty() ) {
+    m_dataCacheBase += "-" + s;
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -70,6 +75,29 @@ void OcaInstance::onWindowClosed()
     m_mainWindowData = NULL;
   }
   emitChanged( m_mainWindowData, e_FlagWindowRemoved );
+}
+
+// -----------------------------------------------------------------------------
+
+QString OcaInstance::getDataCacheBase() const
+{
+  OcaLock lock( this );
+  return m_dataCacheBase;
+}
+
+// -----------------------------------------------------------------------------
+
+bool OcaInstance::setDataCacheBase( const QString& path )
+{
+  uint flags = 0;
+  {
+    WLock lock( this );
+    if( m_dataCacheBase != path ) {
+      m_dataCacheBase = path;
+      flags = e_FlagCachePathChanged;
+    }
+  }
+  return emitChanged( m_mainWindowData, flags );
 }
 
 // -----------------------------------------------------------------------------

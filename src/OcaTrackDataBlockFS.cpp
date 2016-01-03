@@ -18,6 +18,7 @@
 */
 
 #include "OcaTrackDataBlockFS.h"
+#include "OcaApp.h"
 
 #include <QtCore>
 
@@ -34,13 +35,7 @@ OcaTrackDataBlock::OcaTrackDataBlock( int channels )
   Q_ASSERT( 0 < m_channels );
   static int counter = 0;
   m_files.resize( s_AVG_MAX_DEPTH + 1 );
-  QString data_path = QString( "octaudio-%1/data.%2" )
-      . arg( QProcessEnvironment::systemEnvironment().value("USER") )
-      . arg( QCoreApplication::applicationPid() );
-
-  m_dataDir = QDir::temp();
-  m_dataDir.mkpath( data_path );
-  m_dataDir.cd( data_path );
+  m_dataDir = OcaApp::getDataCacheDir();
 
   for( int i = 0; i <= s_AVG_MAX_DEPTH; i++ ) {
     //m_files[i] = new QTemporaryFile( "data/tXXXXXX.bin" );

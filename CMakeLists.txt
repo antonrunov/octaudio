@@ -54,7 +54,7 @@ else()
 endif()
 
 # Qt
-find_package( Qt4 REQUIRED )
+find_package( Qt4 REQUIRED QtCore QtGui QtNetwork )
 include( ${QT_USE_FILE} )
 add_definitions(${QT_DEFINITIONS})
 

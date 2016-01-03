@@ -34,6 +34,9 @@ class OcaWindowData : public OcaObject
   Q_PROPERTY( OcaTrackGroup* active_group READ getActiveGroup WRITE setActiveGroup );
   Q_PROPERTY( QString output_device READ getOutputDevice WRITE setOutputDevice );
   Q_PROPERTY( QString input_device READ getInputDevice WRITE setInputDevice );
+#ifdef OCA_USE_FS_DATABLOCK
+  Q_PROPERTY( QString cache_dir READ getCacheBase WRITE setCacheBase );
+#endif
 
   public:
     OcaWindowData();
@@ -83,8 +86,10 @@ class OcaWindowData : public OcaObject
     void    setAudioSampleRate( double rate );
     QString getOutputDevice() const;
     QString getInputDevice() const;
+    QString getCacheBase() const;
     bool    setOutputDevice( const QString& dev_name );
     bool    setInputDevice( const QString& dev_name );
+    bool    setCacheBase( const QString& path );
 
   protected slots:
     void onMonitorClosed( OcaObject* obj );

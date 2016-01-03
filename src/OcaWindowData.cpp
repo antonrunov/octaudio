@@ -22,6 +22,7 @@
 #include "OcaMonitor.h"
 #include "OcaTrackGroup.h"
 #include "OcaApp.h"
+#include "OcaInstance.h"
 #include "OcaAudioController.h"
 
 #include <QtCore>
@@ -357,6 +358,20 @@ bool OcaWindowData::setDefaultSampleRate( double rate )
   }
 
   return emitChanged( flags );
+}
+
+// ------------------------------------------------------------------------------------
+
+QString OcaWindowData::getCacheBase() const
+{
+  return OcaApp::getOcaInstance()->getDataCacheBase();
+}
+
+// ------------------------------------------------------------------------------------
+
+bool OcaWindowData::setCacheBase( const QString& path )
+{
+  return OcaApp::getOcaInstance()->setDataCacheBase( path );
 }
 
 // ------------------------------------------------------------------------------------

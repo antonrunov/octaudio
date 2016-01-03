@@ -55,6 +55,13 @@ class OcaDialogPreferences : public OcaDialogPropertiesBase
     QComboBox*          m_devInput;
     QLineEdit*          m_editDefaultRate;
     OcaValidatorDouble* m_defaultRateValidator;
+
+#ifdef OCA_USE_FS_DATABLOCK
+  protected:
+    QLineEdit*          m_editDataCacheBase;
+  protected slots:
+    void setDataCache();
+#endif
 };
 
 
