@@ -162,6 +162,7 @@ void OcaTrackGroupView::setTimeScale( double scale )
     m_autoBaseLeft = start;
     m_autoBaseRight = start + new_duration;
     m_group->setView( start, start + new_duration );
+    m_timeScale = m_group->getViewDuration() / getTrackWidth();
   }
 }
 
