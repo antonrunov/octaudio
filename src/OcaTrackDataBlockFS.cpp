@@ -353,6 +353,20 @@ bool OcaTrackDataBlock::split( qint64 ofs, OcaTrackDataBlock* rem )
   }
 
   if( NULL != rem ) {
+    const long BS = 4096 * 128;
+    OcaDataVector buffer;
+
+    long len = m_length - ofs;
+    long pos = ofs;
+    long pos2 = 0;
+    while( 0 < len ) {
+      long n = read( &buffer, pos, qMin( len, BS ) );
+      len -= n;
+      pos += n;
+      long n2 = rem->write( &buffer, pos2 );
+      Q_ASSERT( n == n2 );
+      pos2 += n2;
+    }
   }
 
   QFile* f = m_files[0];
