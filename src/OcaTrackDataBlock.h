@@ -22,7 +22,7 @@
 
 #include "OcaDataVector.h"
 
-#include <QVector>
+#include <QList>
 #include <QFile>
 #include <QDir>
 
@@ -55,12 +55,12 @@ class OcaTrackDataBlock
   protected:
     int              m_channels;
     qint64           m_length;
-    QVector<QFile*>  m_files;
+    QList<QFile*>    m_files;
     QDir             m_dataDir;
 
   protected:
-    static const int s_AVG_MAX_DEPTH;
     static const int s_AVG_FACTOR;
+    static volatile int s_counter;
 
 };
 

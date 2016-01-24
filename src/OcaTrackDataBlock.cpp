@@ -22,8 +22,8 @@
 
 #include <QtCore>
 
-const int OcaTrackDataBlock::s_AVG_MAX_DEPTH = 16;
 const int OcaTrackDataBlock::s_AVG_FACTOR = 32;
+volatile int OcaTrackDataBlock::s_counter = 0;
 
 // ------------------------------------------------------------------------------------
 
@@ -33,21 +33,17 @@ OcaTrackDataBlock::OcaTrackDataBlock( int channels )
   m_length( 0 )
 {
   Q_ASSERT( 0 < m_channels );
-  static int counter = 0;
-  m_files.resize( s_AVG_MAX_DEPTH + 1 );
   m_dataDir = OcaApp::getDataCacheDir();
 
-  for( int i = 0; i <= s_AVG_MAX_DEPTH; i++ ) {
-    QString name = QString( "%1.bin" ) . arg( counter++, 6, 16, QLatin1Char('0') );
-    m_files[i] = new QFile( m_dataDir.filePath( name ) );
-  }
+  QString name = QString( "%1.bin" ) . arg( s_counter++, 6, 16, QLatin1Char('0') );
+  m_files.append( new QFile( m_dataDir.filePath( name ) ) );
 }
 
 // ------------------------------------------------------------------------------------
 
 OcaTrackDataBlock::~OcaTrackDataBlock()
 {
-  for( int i = 0; i <= s_AVG_MAX_DEPTH; i++ ) {
+  for( int i = 0; i < m_files.size(); i++ ) {
     m_files[i]->remove();
     delete m_files[i];
     m_files[i] = NULL;
@@ -63,7 +59,7 @@ long OcaTrackDataBlock::getAvailableDecimation( long decimation_hint )
     return 1;
   }
   int k = floor( log2(decimation_hint) / log2(s_AVG_FACTOR) );
-  return pow( s_AVG_FACTOR, qMin( k, s_AVG_MAX_DEPTH ) );
+  return pow( s_AVG_FACTOR, k );
 }
 
 // ------------------------------------------------------------------------------------
@@ -232,7 +228,7 @@ long OcaTrackDataBlock::write( const OcaDataVector* src, qint64 ofs, long len_ma
   Q_ASSERT( avg_idx == avg.length() );
 
   m_length = qMax( m_length, ofs + result );
-  writeAvgChunks( avg_ofs, &avg, 0, false );
+  writeAvgChunks( avg_ofs, &avg, 1, false );
   return result;
 }
 
@@ -241,6 +237,11 @@ long OcaTrackDataBlock::write( const OcaDataVector* src, qint64 ofs, long len_ma
 void OcaTrackDataBlock::writeAvgChunks( qint64 ofs, const OcaAvgVector* avg, int order, bool truncate )
 {
   long len = avg->length();
+  if( m_files.size() <= order ) {
+    QString name = QString( "%1.bin" ) . arg( s_counter++, 6, 16, QLatin1Char('0') );
+    Q_ASSERT( m_files.size() == order );
+    m_files.append( new QFile( m_dataDir.filePath( name ) ) );
+  }
 
   qint64 avg_ofs = ofs / s_AVG_FACTOR;
   long avg_len = (ofs + len - 1 ) / s_AVG_FACTOR + 1 - avg_ofs;
@@ -249,7 +250,7 @@ void OcaTrackDataBlock::writeAvgChunks( qint64 ofs, const OcaAvgVector* avg, int
 
   const OcaAvgData* v = avg->constData();
 
-  QFile* f = m_files[ order + 1 ];
+  QFile* f = m_files[ order ];
   f->open( QIODevice::ReadWrite );
   int K = m_channels * sizeof(OcaAvgData);
   int i0 = ofs % s_AVG_FACTOR;
@@ -262,7 +263,8 @@ void OcaTrackDataBlock::writeAvgChunks( qint64 ofs, const OcaAvgVector* avg, int
   f->close();
 
   order++;
-  if( order < s_AVG_MAX_DEPTH ) {
+
+  if( 1 < ofs + len ) {
     if( 0 != i0 ) {
       int tmp_len = qMin( i0 + len, (long)s_AVG_FACTOR );
       memcpy( tmp.data() + i0 * m_channels, v, (tmp_len - i0) * K );
@@ -273,14 +275,20 @@ void OcaTrackDataBlock::writeAvgChunks( qint64 ofs, const OcaAvgVector* avg, int
     if( avg_idx < avg_len ) {
       avg_idx += calcAvg2( avg2.data() + avg_idx * m_channels, avg, i0, len - i0 );
     }
-  }
 
-  if( truncate ) {
-    f->resize( (ofs + len) * m_channels * sizeof(OcaAvgData) );
-  }
+    if( truncate ) {
+      f->resize( (ofs + len) * m_channels * sizeof(OcaAvgData) );
+    }
 
-  if( order < s_AVG_MAX_DEPTH ) {
     writeAvgChunks( avg_ofs, &avg2, order, truncate );
+  }
+  else if( truncate ) {
+    while( m_files.size() > order ) {
+      QFile* f = m_files.takeLast();
+      f->remove();
+      delete f;
+      f = NULL;
+    }
   }
 }
 
@@ -290,10 +298,10 @@ long OcaTrackDataBlock::readAvg( OcaAvgVector* dst, long decimation,
                                                     qint64 ofs, long len ) const
 {
   int k = floor( log2(decimation) / log2(s_AVG_FACTOR) );
-  if( ( s_AVG_MAX_DEPTH < k ) ||
-      ( decimation != pow( s_AVG_FACTOR, qMin( k, s_AVG_MAX_DEPTH ) ) ) ) {
+  if( ( 0 == m_length ) || ( decimation != pow( s_AVG_FACTOR, k ) ) ) {
     return 0;
   }
+  k = qMin( k, m_files.size() - 1 );
   long result = 0;
 
   len = qMin( (qint64)len, ( m_length - ofs + decimation - 1 ) / decimation );
@@ -373,7 +381,7 @@ bool OcaTrackDataBlock::split( qint64 ofs, OcaTrackDataBlock* rem )
   read( &tmp, m_length - s_AVG_FACTOR + i0, s_AVG_FACTOR - i0 );
   OcaAvgVector avg( m_channels, 1 );
   calcAvg( avg.data(), &tmp, 0, 1 );
-  writeAvgChunks( avg_ofs, &avg, 0, true );
+  writeAvgChunks( avg_ofs, &avg, 1, true );
 
   return true;
 }
