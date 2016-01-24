@@ -22,8 +22,9 @@
 
 #include "OcaDataVector.h"
 
-#include <QList>
 #include <QVector>
+#include <QFile>
+#include <QDir>
 
 class OcaTrackDataBlock
 {
@@ -37,28 +38,27 @@ class OcaTrackDataBlock
   public:
     qint64 getLength() const;
     int  getChannels() const { return m_channels; }
-    long read( OcaDataVector* dst, long ofs, long len ) const;
-    long write( const OcaDataVector* src, long ofs, long len_max = 0 );
-    long readAvg( OcaAvgVector* dst, long decimation, long ofs, long len ) const;
+    long read( OcaDataVector* dst, qint64 ofs, long len ) const;
+    long write( const OcaDataVector* src, qint64 ofs, long len_max = 0 );
+    long readAvg( OcaAvgVector* dst, long decimation, qint64 ofs, long len ) const;
 
-    bool split( long ofs, OcaTrackDataBlock* rem );
+    bool split( qint64 ofs, OcaTrackDataBlock* rem );
     qint64 append( const OcaTrackDataBlock* block );
 
     bool validate() const;
 
   protected:
-    int calcAvg( OcaAvgData* dst, const OcaDataVector* v, int ofs, int len );
-    int calcAvg2( OcaAvgData* dst, const OcaAvgVector* v, int ofs, int len );
-    void writeAvgChunks( long ofs, const OcaAvgVector* avg, int order, bool truncate );
+    int calcAvg( OcaAvgData* dst, const OcaDataVector* v, long ofs, long len );
+    int calcAvg2( OcaAvgData* dst, const OcaAvgVector* v, long ofs, long len );
+    void writeAvgChunks( qint64 ofs, const OcaAvgVector* avg, int order, bool truncate );
 
   protected:
-    int                               m_channels;
-    long                              m_length;
-    QList<OcaDataVector>              m_chunks;
-    QVector< QList<OcaAvgVector> >    m_avgChunks;
+    int              m_channels;
+    qint64           m_length;
+    QVector<QFile*>  m_files;
+    QDir             m_dataDir;
 
   protected:
-    static const int s_CHUNK_SIZE;
     static const int s_AVG_MAX_DEPTH;
     static const int s_AVG_FACTOR;
 

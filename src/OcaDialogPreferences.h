@@ -43,6 +43,7 @@ class OcaDialogPreferences : public OcaDialogPropertiesBase
     void setDefaultRate();
     void setInputDevice( const QString& dev_name );
     void setOutputDevice( const QString& dev_name );
+    void setDataCache();
 
   public:
     virtual bool eventFilter( QObject* obj, QEvent* ev );
@@ -55,13 +56,7 @@ class OcaDialogPreferences : public OcaDialogPropertiesBase
     QComboBox*          m_devInput;
     QLineEdit*          m_editDefaultRate;
     OcaValidatorDouble* m_defaultRateValidator;
-
-#ifdef OCA_USE_FS_DATABLOCK
-  protected:
     QLineEdit*          m_editDataCacheBase;
-  protected slots:
-    void setDataCache();
-#endif
 };
 
 

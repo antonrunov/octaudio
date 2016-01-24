@@ -34,9 +34,7 @@ class OcaWindowData : public OcaObject
   Q_PROPERTY( OcaTrackGroup* active_group READ getActiveGroup WRITE setActiveGroup );
   Q_PROPERTY( QString output_device READ getOutputDevice WRITE setOutputDevice );
   Q_PROPERTY( QString input_device READ getInputDevice WRITE setInputDevice );
-#ifdef OCA_USE_FS_DATABLOCK
   Q_PROPERTY( QString cache_dir READ getCacheBase WRITE setCacheBase );
-#endif
 
   public:
     OcaWindowData();

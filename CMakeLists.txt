@@ -106,8 +106,6 @@ else()
 endif()
 mark_as_advanced( MARKED_EXECUTABLE SED_EXECUTABLE )
 
-option( OCTAUDIO_USE_FS_DATABLOCK "(EXPERIMENTAL) use file based data blocks" OFF )
-
 # Platform specific config
 set( DOC_PREFIX "doc/octaudio/" )
 set( SHARE_PREFIX "" )
@@ -190,18 +188,11 @@ include_directories( ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} )
 include_directories( ${OCTAVE_INCLUDE_DIR}/.. ${OCTAVE_INCLUDE_DIR} ${OCTAVE_HDF5_INCLUDE_DIR}  )
 include_directories( ${PORTAUDIO_INCLUDE_DIR} ${SAMPLERATE_INCLUDES} )
 
-if( OCTAUDIO_USE_FS_DATABLOCK )
-  set( OCTAUDIO_DATABLOCK_SRC "OcaTrackDataBlockFS" )
-  add_definitions( -DOCA_USE_FS_DATABLOCK )
-else()
-  set( OCTAUDIO_DATABLOCK_SRC "OcaTrackDataBlock" )
-endif()
-
 set( octaudio_SRC
   src/OcaDialogAbout.cpp
   src/OcaDialogPreferences.cpp
   src/OcaResampler.cpp
-  src/${OCTAUDIO_DATABLOCK_SRC}.cpp
+  src/OcaTrackDataBlock.cpp
   src/OcaDialogPropertiesSmartTrack.cpp
   src/OcaRingBuffer.cpp
   src/OcaPropProxyTrack.cpp
