@@ -150,13 +150,17 @@ int OcaApp::run()
           fprintf( stderr, "  %s\n", r2 ? "DONE" : "FAILED" );
         }
       }
+      QLocalServer::removeServer( id );
     }
   }
   QDir::current().mkpath( s );
   m_sessionId = QUuid::createUuid().toString();
   QLocalServer::removeServer( m_sessionId );
   QLocalServer* server = new QLocalServer( this );
-  server->listen( m_sessionId );
+  if( ! server->listen( m_sessionId ) ) {
+    fprintf( stderr, "failed to init session\n" );
+    return 1;
+  }
   s += "/" + m_sessionId;
   m_sessionFile.setFileName( s );
   m_sessionFile.open( QIODevice::WriteOnly );
