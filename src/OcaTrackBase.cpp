@@ -1,5 +1,5 @@
 /*
-   Copyright 2013-2015 Anton Runov
+   Copyright 2013-2016 Anton Runov
 
    This file is part of Octaudio.
 
