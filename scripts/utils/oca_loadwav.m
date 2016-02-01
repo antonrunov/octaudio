@@ -18,10 +18,10 @@
 ## oca_loadwav( filename, [track], [mono] )
 
 function oca_loadwav( filename, track=[], mono=false )
-  [ x, fs ] = wavread( filename );
-  x = x';
+  fs = nthargout( 2, @wavread, filename, 0 );
+  [len, ch] = wavread( filename, 'size' );
   if mono
-    x = mean( x, 1 );
+    ch = 1;
   end
 
   if ! isempty(track)
@@ -31,12 +31,25 @@ function oca_loadwav( filename, track=[], mono=false )
     end
     oca_data_clear( id );
     oca_track_setprop( "rate", fs, id );
-    oca_track_setprop( "channels", size(x,1), id );
-    oca_data_set( 0, x, id );
   else
     [dir, name ] = fileparts( filename );
     id = oca_track_add( name, fs );
-    oca_track_setprop( "channels", size(x,1), id );
-    oca_data_set( 0, x, id );
   end
+  oca_track_setprop( "channels", ch, id );
+
+  t = 0;
+  res = 0;
+  block_sz = fs*10;
+
+  while res < len
+    x = wavread( filename, res + [1,block_sz] )';
+    if mono
+      x = mean( x, 1 );
+    end
+    assert( ! isempty(x) );
+    assert( size( x, 1 ) == ch );
+    t = oca_data_set( t, x, id );
+    res += size( x, 2 );
+  end
+
 endfunction

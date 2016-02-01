@@ -19,7 +19,7 @@
 
 function oca_spectrum( w=[], track=0, limit=-120, linfreq=false )
   sr = oca_track_getprop( "rate", track );
-  [ sp, freq ] = pwelch( oca_data_get( "region", track ), w, [], [], sr );
+  [ sp, freq ] = pwelch( mean( oca_data_get( "region", track ), 1 ), w, [], [], sr );
   if linfreq
     plot( freq, max( limit, 10*log10( sp ) ) );
   else

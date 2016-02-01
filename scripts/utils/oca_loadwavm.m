@@ -18,24 +18,37 @@
 ## oca_loadwavm( filename, [basename] )
 
 function oca_loadwavm( filename, basename )
-  [ x, fs ] = wavread( filename );
+  fs = nthargout( 2, @wavread, filename, 0 );
+  [len, c] = wavread( filename, 'size' );
   if ! exist( "basename", "var" )
     [dir, name ] = fileparts( filename );
     basename = name;
   end
-  c = size(x)(2);
 
   if 1 == c
-    [idx, id ] = oca_track_add( basename, fs );
-    oca_data_set( 0, x, id );
+    [idx, id{1} ] = oca_track_add( basename, fs );
   else
     for i = 1:c
       [idx, id{i} ] = oca_track_add( sprintf( "%s-%d", basename, i ), fs );
-      oca_data_set( 0, x(:,i), id{i} );
     end
   end
   if 2 == c
     oca_track_setprop( "stereo_pan", -1, id{1} );
     oca_track_setprop( "stereo_pan", 1, id{2} );
+  end
+
+  t = 0;
+  res = 0;
+  block_sz = fs*10;
+
+  while res < len
+    x = wavread( filename, res + [1,block_sz] )';
+    assert( ! isempty(x) );
+    assert( size( x, 1 ) == c );
+    for i = 1:c
+      t1 = oca_data_set( t, x(i,:), id{i} );
+    end
+    t = t1;
+    res += size( x, 2 );
   end
 endfunction
