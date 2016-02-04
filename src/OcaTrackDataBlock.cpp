@@ -220,11 +220,15 @@ long OcaTrackDataBlock::write( const OcaDataVector* src, qint64 ofs, long len_ma
 
 
   if( 0 != i0 ) {
-    memcpy( tmp.data() + i0 * m_channels, src_v, (s_AVG_FACTOR - i0) * K );
-    avg_idx = calcAvg( avg.data(), &tmp, 0, s_AVG_FACTOR );
+    int tmp_len = qMin( i0 + len, (long)s_AVG_FACTOR );
+    memcpy( tmp.data() + i0 * m_channels, src_v, (tmp_len - i0) * K );
+    tmp.setLength( tmp_len );
+    avg_idx = calcAvg( avg.data(), &tmp, 0, tmp_len );
     i0 = s_AVG_FACTOR - i0;
   }
-  avg_idx += calcAvg( avg.data() + avg_idx * m_channels, src, i0, result - i0 );
+  if( avg_idx < avg_len ) {
+    avg_idx += calcAvg( avg.data() + avg_idx * m_channels, src, i0, result - i0 );
+  }
   Q_ASSERT( avg_idx == avg.length() );
 
   m_length = qMax( m_length, ofs + result );
