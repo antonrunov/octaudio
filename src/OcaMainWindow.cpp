@@ -1006,8 +1006,9 @@ void OcaMainWindow::updateStatusBar()
           x = *block->constData();
         }
       }
-      s = QString( "%1 Hz   %2  |  v = %4  |  " )
+      s = QString( "%1 Hz - %2 ch   %3  |  v = %4  |  " )
                           .arg( track->getSampleRate() )
+                          .arg( track->getChannels() )
                           .arg( track->getDisplayText() )
                           .arg( x, 0, 'f', 5 );
     }
