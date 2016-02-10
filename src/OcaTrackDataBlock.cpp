@@ -36,7 +36,7 @@ OcaTrackDataBlock::OcaTrackDataBlock( int channels )
   m_dataDir = OcaApp::getDataCacheDir();
 
   QString name = QString( "%1.bin" ) . arg( s_counter++, 6, 16, QLatin1Char('0') );
-  m_files.append( new QFile( m_dataDir.filePath( name ) ) );
+  m_files.append( m_dataDir.filePath( name ) );
 }
 
 // ------------------------------------------------------------------------------------
@@ -44,9 +44,7 @@ OcaTrackDataBlock::OcaTrackDataBlock( int channels )
 OcaTrackDataBlock::~OcaTrackDataBlock()
 {
   for( int i = 0; i < m_files.size(); i++ ) {
-    m_files[i]->remove();
-    delete m_files[i];
-    m_files[i] = NULL;
+    QFile::remove( m_files[i] );
   }
   m_dataDir.rmdir( m_dataDir.path() );
 }
@@ -80,12 +78,12 @@ long OcaTrackDataBlock::read( OcaDataVector* dst, qint64 ofs, long len ) const
   dst->alloc( m_channels, len );
   double* dst_v = dst->data();
   long result = 0;
-  QFile* f = m_files[0];
-  f->open( QIODevice::ReadWrite );
+  QFile f( m_files[0] );
+  f.open( QIODevice::ReadWrite );
   int K = m_channels * sizeof(double);
-  f->seek( ofs * K );
-  result = f->read( (char*)dst_v, len * K ) / K;
-  f->close();
+  f.seek( ofs * K );
+  result = f.read( (char*)dst_v, len * K ) / K;
+  f.close();
   Q_ASSERT( result == len );
   return result;
 }
@@ -205,19 +203,18 @@ long OcaTrackDataBlock::write( const OcaDataVector* src, qint64 ofs, long len_ma
   long result = 0;
   const double* src_v = src->constData();
 
-  QFile* f = m_files[0];
-  f->open( QIODevice::ReadWrite );
+  QFile f( m_files[0] );
+  f.open( QIODevice::ReadWrite );
   int K = m_channels * sizeof(double);
   int i0 = ofs % s_AVG_FACTOR;
-  f->seek( ( ofs - i0 ) * K );
+  f.seek( ( ofs - i0 ) * K );
   OcaDataVector tmp( m_channels, s_AVG_FACTOR );
   if( 0 != i0 ) {
-    f->read( (char*)tmp.data(), i0 * K );
+    f.read( (char*)tmp.data(), i0 * K );
   }
-  result = f->write( (char*)src_v, len * K ) / K;
+  result = f.write( (char*)src_v, len * K ) / K;
   Q_ASSERT( result == len );
-  f->close();
-
+  f.close();
 
   if( 0 != i0 ) {
     int tmp_len = qMin( i0 + len, (long)s_AVG_FACTOR );
@@ -244,7 +241,7 @@ void OcaTrackDataBlock::writeAvgChunks( qint64 ofs, const OcaAvgVector* avg, int
   if( m_files.size() <= order ) {
     QString name = QString( "%1.bin" ) . arg( s_counter++, 6, 16, QLatin1Char('0') );
     Q_ASSERT( m_files.size() == order );
-    m_files.append( new QFile( m_dataDir.filePath( name ) ) );
+    m_files.append( m_dataDir.filePath( name ) );
   }
 
   qint64 avg_ofs = ofs / s_AVG_FACTOR;
@@ -254,17 +251,17 @@ void OcaTrackDataBlock::writeAvgChunks( qint64 ofs, const OcaAvgVector* avg, int
 
   const OcaAvgData* v = avg->constData();
 
-  QFile* f = m_files[ order ];
-  f->open( QIODevice::ReadWrite );
+  QFile f( m_files[order] );
+  f.open( QIODevice::ReadWrite );
   int K = m_channels * sizeof(OcaAvgData);
   int i0 = ofs % s_AVG_FACTOR;
-  f->seek( ( ofs - i0 ) * K );
+  f.seek( ( ofs - i0 ) * K );
   OcaAvgVector tmp( m_channels, s_AVG_FACTOR );
   if( 0 != i0 ) {
-    f->read( (char*)tmp.data(), i0 * K );
+    f.read( (char*)tmp.data(), i0 * K );
   }
-  f->write( (char*)v, len * K );
-  f->close();
+  f.write( (char*)v, len * K );
+  f.close();
 
   order++;
 
@@ -281,17 +278,15 @@ void OcaTrackDataBlock::writeAvgChunks( qint64 ofs, const OcaAvgVector* avg, int
     }
 
     if( truncate ) {
-      f->resize( (ofs + len) * m_channels * sizeof(OcaAvgData) );
+      f.resize( (ofs + len) * m_channels * sizeof(OcaAvgData) );
     }
 
     writeAvgChunks( avg_ofs, &avg2, order, truncate );
   }
   else if( truncate ) {
+    f.resize( m_channels * sizeof(OcaAvgData) );
     while( m_files.size() > order ) {
-      QFile* f = m_files.takeLast();
-      f->remove();
-      delete f;
-      f = NULL;
+      QFile::remove( m_files.takeLast() );
     }
   }
 }
@@ -314,24 +309,24 @@ long OcaTrackDataBlock::readAvg( OcaAvgVector* dst, long decimation,
     dst->alloc( m_channels, len );
     OcaAvgData* dst_v = dst->data();
 
-    QFile* f = m_files[k];
-    f->open( QIODevice::ReadWrite );
+    QFile f( m_files[k] );
+    f.open( QIODevice::ReadWrite );
     int K = m_channels * sizeof(OcaAvgData);
-    f->seek( idx0 * K );
-    result = f->read( (char*)dst_v, len * K ) / K;
+    f.seek( idx0 * K );
+    result = f.read( (char*)dst_v, len * K ) / K;
     //Q_ASSERT( result == len );
-    f->close();
+    f.close();
   }
   else {
     OcaDataVector d( m_channels, len );
 
-    QFile* f = m_files[0];
-    f->open( QIODevice::ReadWrite );
+    QFile f( m_files[0] );
+    f.open( QIODevice::ReadWrite );
     int K = m_channels * sizeof(double);
-    f->seek( ofs * K );
-    result = f->read( (char*)d.data(), len * K ) / K;
+    f.seek( ofs * K );
+    result = f.read( (char*)d.data(), len * K ) / K;
     Q_ASSERT( result == len );
-    f->close();
+    f.close();
 
     dst->alloc( m_channels, len );
     OcaAvgData* dst_v = dst->data();
@@ -374,9 +369,9 @@ bool OcaTrackDataBlock::split( qint64 ofs, OcaTrackDataBlock* rem )
     }
   }
 
-  QFile* f = m_files[0];
+  QFile f( m_files[0] );
   int K = m_channels * sizeof(double);
-  f->resize( K * ofs );
+  f.resize( K * ofs );
   m_length = ofs;
 
   qint64 avg_ofs = ofs / s_AVG_FACTOR;
