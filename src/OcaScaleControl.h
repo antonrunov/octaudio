@@ -42,14 +42,9 @@ class OcaScaleControl : public QLineEdit
     void changed( double value );
     void moved( double step );
 
-  public:
-    virtual QSize sizeHint () const;
-
   protected:
-    /*
     virtual void enterEvent( QEvent* event );
     virtual void leaveEvent( QEvent* event );
-    */
     virtual void focusOutEvent( QFocusEvent* event );
     virtual void keyPressEvent( QKeyEvent* key_event );
     virtual void wheelEvent( QWheelEvent* event );
@@ -59,12 +54,16 @@ class OcaScaleControl : public QLineEdit
 
   protected:
     void  updateText();
+    void  updateTransparency();
+    void  updateWidth();
 
   protected:
     double  m_value;
     double  m_step;
     double  m_fastStep;
     double  m_fineStep;
+    double  m_transparencyBg;
+    double  m_transparencyFg;
 };
 
 #endif // ScaleControl_h

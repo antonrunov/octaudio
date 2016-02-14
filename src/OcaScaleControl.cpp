@@ -29,7 +29,9 @@ OcaScaleControl::OcaScaleControl( QWidget* parent /*= NULL*/ )
   m_value( 0.0 ),
   m_step( 1.0 ),
   m_fastStep( 4.0 ),
-  m_fineStep( 0.25 )
+  m_fineStep( 0.25 ),
+  m_transparencyBg( 1.0 ),
+  m_transparencyFg( 1.0 )
 {
   setFrame( false );
   setFocusPolicy( Qt::ClickFocus );
@@ -37,7 +39,6 @@ OcaScaleControl::OcaScaleControl( QWidget* parent /*= NULL*/ )
   setAttribute( Qt::WA_MacShowFocusRect, false );
   connect( this, SIGNAL(textChanged(const QString &)),
                  SLOT(onTextChanged(const QString&)) );
-  resize( sizeHint() );
   updateText();
 }
 
@@ -51,14 +52,24 @@ OcaScaleControl::~OcaScaleControl()
 
 void OcaScaleControl::setTransparency( double alpha_bg, double alpha_fg /*= 1.0*/ )
 {
+  m_transparencyBg = alpha_bg;
+  m_transparencyFg = alpha_fg;
+  updateTransparency();
+}
+
+// -----------------------------------------------------------------------------
+
+void OcaScaleControl::updateTransparency()
+{
   QPalette p = palette();
- 
+
+  bool active = underMouse() || hasFocus();
   QColor c = p.color( backgroundRole() );
-  c.setAlphaF( alpha_bg );
+  c.setAlphaF( active ? 1.0 : m_transparencyBg );
   p.setColor( backgroundRole(), c );
   
   c = p.color( foregroundRole() );
-  c.setAlphaF( alpha_fg );
+  c.setAlphaF( active ? 1.0 : m_transparencyFg );
   p.setColor( foregroundRole(), c );
   
   setPalette( p );
@@ -76,11 +87,16 @@ void OcaScaleControl::setValue( double value )
 
 // -----------------------------------------------------------------------------
 
-QSize OcaScaleControl::sizeHint() const
+void OcaScaleControl::enterEvent( QEvent* event )
 {
-  QSize hint = QLineEdit::sizeHint();
-  hint.setWidth( fontMetrics().width( "00000000000" ) );
-  return hint;
+  updateTransparency();
+}
+
+// -----------------------------------------------------------------------------
+
+void OcaScaleControl::leaveEvent( QEvent* event )
+{
+  updateTransparency();
 }
 
 // -----------------------------------------------------------------------------
@@ -89,6 +105,7 @@ void OcaScaleControl::focusOutEvent( QFocusEvent* event )
 {
   updateText();
   QLineEdit::focusOutEvent( event );
+  updateTransparency();
 }
 
 // -----------------------------------------------------------------------------
@@ -97,7 +114,20 @@ void OcaScaleControl::updateText()
 {
   blockSignals( true );
   setText( QString::number( m_value, 'f', 4 ) );
+  updateWidth();
   blockSignals( false );
+}
+
+// -----------------------------------------------------------------------------
+
+void OcaScaleControl::updateWidth()
+{
+  QPoint p = pos();
+  int w_cur = width();
+  int extra_width = minimumSizeHint().width() - fontMetrics().maxWidth() + 2;
+  resize( fontMetrics().width( text() ) + extra_width, height() );
+  p.setX( p.x() + w_cur - width() );
+  move( p );
 }
 
 // -----------------------------------------------------------------------------
@@ -168,13 +198,14 @@ void OcaScaleControl::wheelEvent( QWheelEvent* event )
 
 // -----------------------------------------------------------------------------
 
-void OcaScaleControl::onTextChanged( const QString& text )
+void OcaScaleControl::onTextChanged( const QString& str )
 {
-  double value = text.toDouble();
+  double value = str.toDouble();
   if( value != m_value ) {
     m_value = value;
     emit changed( m_value );
   }
+  updateWidth();
 }
 
 // -----------------------------------------------------------------------------
