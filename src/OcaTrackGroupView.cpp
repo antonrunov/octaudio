@@ -33,6 +33,8 @@
 #include <QtCore>
 #include <QtGui>
 
+static const int TIME_SCROLLBAR_RES = INT_MAX / 2 - 1000;
+
 // ------------------------------------------------------------------------------------
 // OcaTrackGroupView::TrackFrame
 
@@ -74,6 +76,8 @@ OcaTrackGroupView::OcaTrackGroupView( OcaTrackGroup* group )
   m_basePosAuto( true ),
   m_autoBaseLeft( -INFINITY ),
   m_autoBaseRight( INFINITY ),
+  m_timeScrollbarScale( 0.0 ),
+  m_timeScrollbarEnabled( false ),
   m_widget( NULL ),
   m_totalHeight( 0 ),
   m_resizedTrack( -1 ),
@@ -114,6 +118,7 @@ OcaTrackGroupView::OcaTrackGroupView( OcaTrackGroup* group )
 
   verticalScrollBar()->setValue( 0 );
 
+  horizontalScrollBar()->setRange( -200, TIME_SCROLLBAR_RES + 200 );
   updateTimeScrollBar();
 }
 
@@ -767,8 +772,14 @@ void OcaTrackGroupView::resizeEvent( QResizeEvent* event )
 
 void OcaTrackGroupView::scrollContentsBy( int dx, int dy )
 {
-  if( 0 != dx ) {
-    m_group->setViewPosition( horizontalScrollBar()->value() * m_timeScale );
+  if( 0 != dx && m_timeScrollbarEnabled ) {
+     int n =  horizontalScrollBar()->value();
+     if( ( 1.0 < m_timeScrollbarScale ) && ( abs(dx) < 5000 ) ) {
+       moveView( -dx * m_timeScale );
+     }
+     else {
+       m_group->setViewPosition( m_group->getStartTime() + ( n * m_timeScrollbarScale - getTrackWidth() ) * m_timeScale );
+     }
   }
   if( 0 != dy ) {
     m_widget->move( 0, -verticalScrollBar()->value() );
@@ -1191,16 +1202,16 @@ void OcaTrackGroupView::mouseDoubleClickEvent( QMouseEvent* event )
 
 void OcaTrackGroupView::updateTimeScrollBar()
 {
-  int t_min = floor( m_group->getStartTime() / m_timeScale - getTrackWidth() );
-  int t_max = ceil( m_group->getEndTime() / m_timeScale /*- viewport()->width()/2*/ );
-  int t_pos = round( m_group->getViewPosition() / m_timeScale );
-  horizontalScrollBar()->blockSignals( true );
-  horizontalScrollBar()->setRange( t_min, t_max );
-  horizontalScrollBar()->setPageStep( getTrackWidth() );
+  m_timeScrollbarScale = ( m_group->getDuration() / m_timeScale + getTrackWidth() ) / TIME_SCROLLBAR_RES;
+  double t_pos =  ( ( m_group->getViewPosition() - m_group->getStartTime() )
+                                          / m_timeScale + getTrackWidth() ) / m_timeScrollbarScale;
+  double tmp_scale = qMin( 1.0, m_timeScrollbarScale );
+
+  m_timeScrollbarEnabled = false;
+  horizontalScrollBar()->setPageStep( getTrackWidth() / tmp_scale );
+  horizontalScrollBar()->setSingleStep( 10 / tmp_scale );
   horizontalScrollBar()->setValue( t_pos );
-  horizontalScrollBar()->setSingleStep( 10 );
-  horizontalScrollBar()->setValue( t_pos );
-  horizontalScrollBar()->blockSignals( false );
+  m_timeScrollbarEnabled = true;
 }
 
 // ------------------------------------------------------------------------------------

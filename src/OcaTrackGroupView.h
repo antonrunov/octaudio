@@ -125,14 +125,16 @@ class OcaTrackGroupView : public QAbstractScrollArea
     };
 
   protected:
-    OcaTimeRuller*              m_timeRuller;
-    double                      m_timeScale;
-    double                      m_audioPosition;
-    int                         m_audioPositionState;
-    double                      m_basePosition;
-    bool                        m_basePosAuto;
-    double                      m_autoBaseLeft;
-    double                      m_autoBaseRight;
+    OcaTimeRuller*  m_timeRuller;
+    double          m_timeScale;
+    double          m_audioPosition;
+    int             m_audioPositionState;
+    double          m_basePosition;
+    bool            m_basePosAuto;
+    double          m_autoBaseLeft;
+    double          m_autoBaseRight;
+    double          m_timeScrollbarScale;
+    bool            m_timeScrollbarEnabled;
 
   protected:
     class TrackFrame : public QWidget
