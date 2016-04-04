@@ -45,6 +45,8 @@
     Up, Down                          - next / previous track
     Home                              - set cursor and view to the group start
     End                               - set cursor and view to the group end
+    Ctrl+Home                         - set cursor and view to the current track start
+    Ctrl+End                          - set cursor and view to the current track end
     Ctrl+Up, Ctrl+Down                - change time scale
     Left, Right                       - move cursor
     Ctrl+Left, Ctrl+Right             - move cursor (fine)

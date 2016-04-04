@@ -969,6 +969,20 @@ void OcaTrackGroupView::keyPressEvent ( QKeyEvent* key_event )
       m_group->setCursorPosition( m_group->getEndTime() );
       break;
 
+    case Qt::Key_Home + Qt::ControlModifier:
+    case Qt::Key_End + Qt::ControlModifier:
+      {
+        OcaTrackBase* w = m_group->getActiveTrack();
+        if( NULL != w ) {
+          double t = ( Qt::Key_Home == key_event->key() ) ? w->getStartTime() : w->getEndTime();
+          if( isfinite( t ) ) {
+            m_group->setCursorPosition( t );
+            m_group->setViewPosition( t - 0.125 * m_group->getViewDuration() );
+          }
+        }
+      }
+      break;
+
     default:
       processed = false;
   }
