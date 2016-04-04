@@ -13,7 +13,7 @@ also record intermediate data or metrics of the processing into separate tracks 
 the detailed picture of the process or the analysis results. Finally, you can write
 complex octave scripts to fully automate the operations. A script can prepare data,
 create and configure all necessary tracks, perform actual processing, analyze the
-results, and display all that stuff in a convenient form with a single command. Surely
+results, and display everything in a convenient form with a single command. Surely
 one can use the existing octave or matlab code directly in Octaudio.
 
 ##### Features
@@ -24,14 +24,14 @@ one can use the existing octave or matlab code directly in Octaudio.
   scale in both directions.
 - Track groups that are switched with tabs.
 - Double precision arithmetics for all data including time and sample rate values.
-- Multichannel tracks.
+- Multichannel, arbitrary length tracks.
 - Two displaying modes (Normal and Abs Value) for both zero centered (like audio data)
   and positive (amplitude, power, etc.) signals.
 - Hide or Show track option.
 - Full-function octave console with multiline command editor, parenthesis matching,
   command history, and autocompletion.
 - Async execution of octave commands.
-- Special built-in octave commands to access all data and object properties.
+- Additional built-in octave commands to access all data and object properties.
 - Smart Tracks to display data from multiple tracks simultaneously.
 - Monitors to display multiple tracks in separate windows with independent scales.
 - Audio playback and recording. Full duplex recording is supported as well.
@@ -45,7 +45,7 @@ one can use the existing octave or matlab code directly in Octaudio.
 - [Quick Tour](doc/tour.md)
 - [Command Reference](doc/commands.md)
 - [Shortcuts](doc/shortcuts.txt)
-- See more information and screenshots on [Octaudio wiki](https://github.com/antonrunov/octaudio/wiki).
+- See more information and screenshots on the [Octaudio wiki](https://github.com/antonrunov/octaudio/wiki).
 
 
 ##### Installing
@@ -69,9 +69,6 @@ Octaudio is in beta state now. While it is quite functional and relatively stabl
 some functionality is not implemented yet, or implemented partially. Below is incomplete
 list of the main issues.
 
-- Track data length is limited by memory. Octaudio is designed to work with arbitrary
-  length data, but current implementation of data blocks uses memory storage. This
-  limitation will be removed in next releases.
 - Missing undo/redo functions.
 - UI functionality is insufficient sometimes, especially for monitors and multiple track
   selection.

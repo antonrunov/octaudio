@@ -390,7 +390,7 @@ List available audio devices. `dev_type` should be either "input" or "output".
 ```
   vals = oca_global_getprop( [names] )
   ret = oca_global_setprop( name, val )
-  ret = oca_global_setprop( props )"  )
+  ret = oca_global_setprop( props )
 ```
 Global properties are:
 - "name", "display_name", "display_text", control the name of octaudio main window
@@ -399,6 +399,7 @@ Global properties are:
 - "active_group", active group ID
 - "output_device", output audio device, string
 - "input_device", input audio device, string
+- "cache_dir", data cache directory (make shure you have enough space there)
 
 
 ##### Utility commands
