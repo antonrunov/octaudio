@@ -1,4 +1,4 @@
-  Octaudio-0.0.7 installation
+  Octaudio-0.0.8 installation
   ===========================
 
 - For any platform, working Octave installation is required. It is also highly recommended
@@ -9,12 +9,12 @@
   on other GNU/Linux distributions with the corresponding Octave version installed.
   Download the appropriate deb package from Octaudio releases page, and install
   it with gdebi (recommended) or dpkg.
-    sudo gdebi octaudio-0.0.7_amd64.deb
+    sudo gdebi octaudio-0.0.8_amd64.deb
   or
-    sudo dpkg --install octaudio-0.0.7_amd64.deb
+    sudo dpkg --install octaudio-0.0.8_amd64.deb
 
 - Mac OS X. Requirements:
-    - Mac OS X 10 "Yosemite"
+    - Mac OS X 10 "Yosemite" or later
     - macports (https://www.macports.org)
     Install macports according to the instructions at https://www.macports.org/install.php.
     Install the following macports packages:
@@ -22,10 +22,10 @@
       sudo port install portaudio
       sudo port install octave
       sudo port install octave-signal
-    Download and unpack  octaudio-0.0.7-macosx.tar.gz archive from Octaudio releases page.
+    Download and unpack  octaudio-0.0.8-macosx.tar.gz archive from Octaudio releases page.
 
 - Windows. Install official MXE Octave build from https://ftp.gnu.org/gnu/octave/windows.
-  Download octaudio-0.0.7-mxe.zip archive from Octaudio releases page, and unpack it into
+  Download octaudio-0.0.8-mxe.zip archive from Octaudio releases page, and unpack it into
   octave-4.0.0 directory inside the Octave installation. Then you can run Octaudio with
   the octaudio.bat command file.
 
