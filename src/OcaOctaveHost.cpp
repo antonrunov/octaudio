@@ -2425,6 +2425,7 @@ QStringList OcaOctaveHost::getCompletions( const QString& hint ) const
   if( NULL != fcn ) {
     int k = 0;
     try {
+      feval ("rehash");
       while( true ) {
         QString s = QString::fromStdString( (*fcn)( hint.toStdString(), k++ ) );
         if( s.isEmpty() ) {
