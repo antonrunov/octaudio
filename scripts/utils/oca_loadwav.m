@@ -18,7 +18,7 @@
 ## oca_loadwav( filename, [track], [mono] )
 
 function oca_loadwav( filename, track=[], mono=false )
-  fs = nthargout( 2, @wavread, filename, 0 );
+  fs = nthargout( 2, @wavread, filename, 1 );
   [len, ch] = wavread( filename, 'size' );
   if mono
     ch = 1;
@@ -42,7 +42,7 @@ function oca_loadwav( filename, track=[], mono=false )
   block_sz = fs*10;
 
   while res < len
-    x = wavread( filename, res + [1,block_sz] )';
+    x = wavread( filename, res + [1,min(block_sz,len-res)] )';
     if mono
       x = mean( x, 1 );
     end

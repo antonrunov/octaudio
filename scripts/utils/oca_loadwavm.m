@@ -18,8 +18,8 @@
 ## oca_loadwavm( filename, [basename] )
 
 function oca_loadwavm( filename, basename )
-  fs = nthargout( 2, @wavread, filename, 0 );
-  [len, c] = wavread( filename, 'size' );
+  fs = nthargout( 2, @wavread, filename, 1 )
+  [len, c] = wavread( filename, 'size' )
   if ! exist( "basename", "var" )
     [dir, name ] = fileparts( filename );
     basename = name;
@@ -42,7 +42,7 @@ function oca_loadwavm( filename, basename )
   block_sz = fs*10;
 
   while res < len
-    x = wavread( filename, res + [1,block_sz] )';
+    x = wavread( filename, res + [1,min(block_sz,len-res)] )';
     assert( ! isempty(x) );
     assert( size( x, 1 ) == c );
     for i = 1:c
