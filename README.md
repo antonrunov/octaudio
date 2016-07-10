@@ -2,7 +2,7 @@ Octaudio is a multitrack audio editor with embedded [GNU Octave](http://www.gnu.
 interpreter. It is not intended to be a general purpose audio
 editor, but a tool mostly designed for audio processing development and testing. If a
 simultaneous use of Octave and Audacity (or a similar audio editor) is your common
-layout, Octaudio might be a tool for you. It can also be useful for the studying of the
+layout, Octaudio might be the tool for you. It can also be useful for the studying of the
 DSP and audio processing.
 
 The main point of Octaudio is a combination of a WYSIWYG audio editing with a command or
@@ -10,7 +10,7 @@ scripting mode. It is somewhat like the Vi for audio. You can easily navigate, v
 record and listen to audio data, select tracks and data regions, and then execute octave
 commands or scripts to analyze, process, or modify selected (or any other) data. You can
 also record intermediate data or metrics of the processing into separate tracks to get
-the detailed picture of the process or the analysis results. Finally, you can write
+a detailed picture of the process or the analysis results. Finally, you can write
 complex octave scripts to fully automate the operations. A script can prepare data,
 create and configure all necessary tracks, perform actual processing, analyze the
 results, and display everything in a convenient form with a single command. Surely
@@ -52,7 +52,7 @@ one can use the existing octave or matlab code directly in Octaudio.
 
 First of all, Octaudio requires Octave to be installed. Pre-built binaries for Debian
 GNU/Linux, Windows (official MXE Octave 4.0 build), and Mac OS X (macports Octave
-installation) are available at the [releases](https://github.com/antonrunov/octaudio/releases) page.
+installation) are available on the [releases](https://github.com/antonrunov/octaudio/releases) page.
 
 Installation instructions are in [doc/install.txt](doc/install.txt).
 
