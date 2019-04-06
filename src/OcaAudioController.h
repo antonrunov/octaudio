@@ -123,6 +123,7 @@ class OcaAudioController : public OcaObject
 
     bool              m_duplexStopRequested;
     bool              m_endOfData;
+    int               m_startSkipCounter;
 
   protected:
     int   m_outputDevice;

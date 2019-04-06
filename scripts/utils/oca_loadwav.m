@@ -37,9 +37,9 @@ function oca_loadwav( filename, track=[], mono=false )
   end
   oca_track_setprop( "channels", ch, id );
 
-  t = 0;
+  t = oca_group_getcontext( {'oca_load_audio_start', 0} );
   res = 0;
-  block_sz = fs*10;
+  block_sz = fs*1000;
 
   while res < len
     x = wavread( filename, res + [1,min(block_sz,len-res)] )';

@@ -69,6 +69,7 @@ int OcaRingBuffer::read( float* data, int length )
   if( 0 < remainder ) {
     memset( data + length, 0, remainder * sizeof(float) );
   }
+  ++m_readCount;
   return length;
 }
 

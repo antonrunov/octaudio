@@ -1,5 +1,5 @@
 /*
-   Copyright 2013-2016 Anton Runov
+   Copyright 2013-2018 Anton Runov
 
    This file is part of Octaudio.
 
@@ -92,6 +92,7 @@ OcaAudioController::OcaAudioController()
 
   m_duplexStopRequested( false ),
   m_endOfData( false ),
+  m_startSkipCounter( 0 ),
 
   m_outputDevice( paNoDevice ),
   m_inputDevice( paNoDevice ),
@@ -219,10 +220,6 @@ double OcaAudioController::startPlayback( OcaTrackGroup* group, double t, double
     }
 
     if( result ) {
-      result = fillPlaybackBuffer();
-    }
-
-    if( result ) {
       result = ( paNoError == Pa_StartStream( stream ) );
     }
 
@@ -247,6 +244,7 @@ double OcaAudioController::startPlayback( OcaTrackGroup* group, double t, double
         m_timer->start( 50 );
       }
       m_endOfData = false;
+      m_startSkipCounter = 0;
       m_playbackStream = stream;
       m_state = e_StatePlaying;
       flags = e_FlagStateChanged | e_FlagCursorChanged;
@@ -849,18 +847,26 @@ bool OcaAudioController::setDevice( QString dev_name, bool recording )
 
 bool OcaAudioController::fillPlaybackBuffer()
 {
-  bool result = false;
-  if( ( NULL != m_playbackBuffer ) && ( NULL != m_groupPlay ) ) {
-    bool duplex = ( m_groupPlay == m_groupRecording );
-    m_playbackCursor = m_groupPlay->readPlaybackData( m_playbackCursor,
-                                                      m_playbackStopPosition,
-                                                      m_playbackBuffer,
-                                                      m_sampleRate,
-                                                      duplex                );
-    result = ( 0 < m_playbackBuffer->getAvailableLength() );
+  if( ( NULL == m_playbackBuffer ) || ( NULL == m_groupPlay ) ) {
+    return false;
   }
 
-  return result;
+  // a tricky workaround for dropping initial parts of audio by some systems
+  // we are waiting a little bit before starting feedding the audio driver
+  if (4 > m_startSkipCounter) {
+    if (0 < m_playbackBuffer->getReadCount()) {
+      ++m_startSkipCounter;
+    }
+    return true;
+  }
+
+  bool duplex = ( m_groupPlay == m_groupRecording );
+  m_playbackCursor = m_groupPlay->readPlaybackData( m_playbackCursor,
+                                                    m_playbackStopPosition,
+                                                    m_playbackBuffer,
+                                                    m_sampleRate,
+                                                    duplex                );
+  return ( 0 < m_playbackBuffer->getAvailableLength() );
 }
 
 // -----------------------------------------------------------------------------

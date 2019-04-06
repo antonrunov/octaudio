@@ -31,6 +31,7 @@ class OcaRingBuffer
     int write( float* data, int length );
     int getAvailableSpace() const { return ring( m_idxRead - m_idxWrite - 1 ); }
     int getAvailableLength() const { return ring( m_idxWrite - m_idxRead ); }
+    unsigned int getReadCount() const {return m_readCount;}
 
   protected:
     int ring( int idx ) const;
@@ -41,6 +42,7 @@ class OcaRingBuffer
 
     volatile int  m_idxRead;
     volatile int  m_idxWrite;
+    unsigned int          m_readCount;
 };
 
 #endif // OcaRingBuffer_h
