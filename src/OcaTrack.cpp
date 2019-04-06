@@ -400,7 +400,7 @@ double OcaTrack::setData( const OcaDataVector* src, double t0, double duration /
   double t_next = NAN;
   uint flags = 0;
 
-  if( ( ! m_readonly ) && ( ! src->isEmpty() ) && isfinite( t0 ) ) {
+  if( ( ! m_readonly ) && ( ! src->isEmpty() ) && std::isfinite( t0 ) ) {
     WLock lock( this );
 
     if( src->channels() != m_channels ) {
@@ -736,7 +736,7 @@ QMap<double,OcaTrackDataBlock*>::const_iterator OcaTrack::findBlock( double t0,
                                                                             bool bottom_allowed  ) const
 {
   QMap<double,OcaTrackDataBlock*>::const_iterator next = m_blocks.lowerBound( t0 - Oca_TIME_TOLERANCE );
-  if( isfinite( t0 ) && ( m_blocks.begin() != next ) ) {
+  if( std::isfinite( t0 ) && ( m_blocks.begin() != next ) ) {
     next--;
     qint64 len = next.value()->getLength();
     if( bottom_allowed ) {

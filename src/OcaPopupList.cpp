@@ -21,6 +21,7 @@
 
 #include <QtCore>
 #include <QtGui>
+#include <QtWidgets>
 
 // -----------------------------------------------------------------------------
 
@@ -150,6 +151,7 @@ void OcaPopupList::popup( QPoint pos )
 {
   move( pos - QPoint( 0, sizeHint().height() ) );
   show();
+  setFocus(Qt::PopupFocusReason);
 }
 
 // -----------------------------------------------------------------------------

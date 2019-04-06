@@ -39,6 +39,7 @@
 
 #include <QtCore>
 #include <QtGui>
+#include <QtWidgets>
 
 // -----------------------------------------------------------------------------
 
@@ -300,8 +301,8 @@ void OcaMainWindow::createToolbars()
 
   m_btnPlayback = new QToolButton( this );
   {
-    QIcon icon( playback_off_xpm );
-    icon.addPixmap( playback_on_xpm, QIcon::Disabled, QIcon::Off );
+    QIcon icon( (QPixmap)playback_off_xpm );
+    icon.addPixmap( QPixmap(playback_on_xpm), QIcon::Disabled, QIcon::Off );
     m_btnPlayback->setIcon( icon );
   }
   m_btnPlayback->setToolTip( tr("Play") );
@@ -309,22 +310,22 @@ void OcaMainWindow::createToolbars()
   audioToolbar->addWidget( m_btnPlayback );
 
   m_btnPause = new QToolButton( this );
-  m_btnPause->setIcon( QIcon(pause_xpm) );
+  m_btnPause->setIcon( QIcon(QPixmap(pause_xpm)) );
   m_btnPause->setCheckable( true );
   m_btnPause->setToolTip( tr("Pause") );
   connect( m_btnPause, SIGNAL(clicked()), SLOT(pauseAudioAll()) );
   audioToolbar->addWidget( m_btnPause );
 
   m_btnStop = new QToolButton( this );
-  m_btnStop->setIcon( QIcon(stop_xpm) );
+  m_btnStop->setIcon( QIcon(QPixmap(stop_xpm)) );
   m_btnStop->setToolTip( tr("Stop") );
   connect( m_btnStop, SIGNAL(clicked()), SLOT(stopAudioAll()) );
   audioToolbar->addWidget( m_btnStop );
 
   m_btnRecording = new QToolButton( this );
   {
-    QIcon icon( recording_off_xpm );
-    icon.addPixmap( recording_on_xpm, QIcon::Disabled, QIcon::Off );
+    QIcon icon( (QPixmap)recording_off_xpm );
+    icon.addPixmap( QPixmap(recording_on_xpm), QIcon::Disabled, QIcon::Off );
     m_btnRecording->setIcon( icon );
   }
   m_btnRecording->setToolTip( tr("Record") );
@@ -332,7 +333,7 @@ void OcaMainWindow::createToolbars()
   audioToolbar->addWidget( m_btnRecording );
 
   m_btnDuplex = new QToolButton( this );
-  m_btnDuplex->setIcon( QIcon(duplex_xpm) );
+  m_btnDuplex->setIcon( QIcon(QPixmap(duplex_xpm)) );
   m_btnDuplex->setToolTip( tr("Duplex") );
   connect( m_btnDuplex, SIGNAL(clicked()), SLOT(startAudioDuplex()) );
   audioToolbar->addWidget( m_btnDuplex );
@@ -953,7 +954,7 @@ void OcaMainWindow::updateCurrentGroup()
   while (it.hasNext()) {
     it.next();
     OcaTrackGroup* g = it.key()->getGroup();
-    it.value()->setShown( (NULL == g ) || ( m_activeGroup == g ) );
+    it.value()->setHidden( !((NULL == g ) || ( m_activeGroup == g )) );
   }
 }
 

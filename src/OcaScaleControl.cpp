@@ -1,5 +1,5 @@
 /*
-   Copyright 2013-2016 Anton Runov
+   Copyright 2013-2018 Anton Runov
 
    This file is part of Octaudio.
 
@@ -21,6 +21,7 @@
 
 #include <QtCore>
 #include <QtGui>
+#include <QtWidgets>
 
 // -----------------------------------------------------------------------------
 
@@ -179,20 +180,35 @@ void OcaScaleControl::keyPressEvent( QKeyEvent* key_event )
 
 void OcaScaleControl::wheelEvent( QWheelEvent* event )
 {  
-  double d = ( 0 < event->delta() ? -0.5 : 0.5 );
-  setCursor( Qt::ArrowCursor );
+  static double distance = 0;
+  distance += event->delta();
+  const int MIN_WHEEL_STEP=40;
+
+  int n = round(distance / MIN_WHEEL_STEP);
+  distance -= n*MIN_WHEEL_STEP;
+  double d = -0.5*n*MIN_WHEEL_STEP/120.0;
   switch( event->orientation() + event->modifiers() ) {
     case Qt::Vertical:
-      emit moved( d * m_step );
+      d *= m_step;
+      event->accept();
       break;
 
     case Qt::Vertical + Qt::ControlModifier:
-      emit moved( d * m_fineStep );
+      d *= m_fineStep;
+      event->accept();
       break;
 
     case Qt::Vertical + Qt::ShiftModifier:
-      emit moved( d * m_fastStep );
+      d *= m_fastStep;
+      event->accept();
       break;
+
+    default:
+      d = 0;
+  }
+
+  if (0 != d) {
+    emit moved(d);
   }
 }
 

@@ -21,6 +21,7 @@
 
 #include <QtCore>
 #include <QtGui>
+#include <QtWidgets>
 
 // ------------------------------------------------------------------------------------
 
@@ -40,7 +41,7 @@ OcaValidatorDouble::~OcaValidatorDouble()
 
 void  OcaValidatorDouble::fixup ( QString & input ) const
 {
-  if( isfinite( m_fixupValue ) ) {
+  if( std::isfinite( m_fixupValue ) ) {
     input = QString::number( m_fixupValue, 'f', decimals() );
   }
 }

@@ -1,4 +1,4 @@
-## Copyright 2013-2016 Anton Runov
+## Copyright 2013-2018 Anton Runov
 ##
 ## This file is part of Octaudio.
 ##
@@ -54,8 +54,7 @@ else()
 endif()
 
 # Qt
-find_package( Qt4 REQUIRED QtCore QtGui QtNetwork )
-include( ${QT_USE_FILE} )
+find_package( Qt5 REQUIRED Core Widgets Gui Network )
 add_definitions(${QT_DEFINITIONS})
 
 # libsamplerate
@@ -270,7 +269,7 @@ set( octaudio_HEADERS_MOC
   src/OcaScaleControl.h
   )
 
-QT4_WRAP_CPP( octaudio_MOC ${octaudio_HEADERS_MOC} )
+QT5_WRAP_CPP( octaudio_MOC ${octaudio_HEADERS_MOC} )
 
 add_custom_command( OUTPUT octaudio_buildinfo.cpp
   COMMAND ${CMAKE_COMMAND}
@@ -285,7 +284,7 @@ add_library( buildinfo OBJECT EXCLUDE_FROM_ALL octaudio_buildinfo.cpp )
 list( APPEND octaudio_SRC $<TARGET_OBJECTS:buildinfo> )
 
 add_executable( octaudio ${GUI_TYPE} ${octaudio_SRC} ${octaudio_MOC} )
-target_link_libraries( octaudio ${QT_LIBRARIES} ${OCTAVE_LIBRARIES} ${PORTAUDIO_LIBRARY} ${EXTRA_LIBS} )
+target_link_libraries( octaudio ${OCTAVE_LIBRARIES} ${PORTAUDIO_LIBRARY} ${EXTRA_LIBS} Qt5::Core Qt5::Widgets Qt5::Gui Qt5::Network )
 set_target_properties( octaudio PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME Octaudio )
 
 if( OCTAUDIO_USE_TIMESTAMP OR OCTAUDIO_USE_GIT_REVISION )

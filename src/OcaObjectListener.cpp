@@ -23,6 +23,7 @@
 
 #include <QtCore>
 #include <QtGui>
+#include <QtWidgets>
 
 // -----------------------------------------------------------------------------
 // OcaObjectListener
@@ -397,13 +398,13 @@ void OcaObjectTracker::onDataRangeChanged( OcaObject*, uint flags,
   if( flags ) {
     QMutexLocker locker( m_mutex );
     m_rangeFlagsCurrent |= flags;
-    if( isnan( m_rangeMinCurrent ) ) {
+    if( std::isnan( m_rangeMinCurrent ) ) {
       m_rangeMinCurrent = range_min;
     }
     else {
       m_rangeMinCurrent = qMin( m_rangeMinCurrent, range_min );
     }
-    if( isnan( m_rangeMaxCurrent ) ) {
+    if( std::isnan( m_rangeMaxCurrent ) ) {
       m_rangeMaxCurrent = range_max;
     }
     else {

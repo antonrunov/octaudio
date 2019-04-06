@@ -24,6 +24,7 @@
 
 #include <QtCore>
 #include <QtGui>
+#include <QtWidgets>
 
 // -----------------------------------------------------------------------------
 
@@ -73,7 +74,7 @@ void OcaTimeRuller::onUpdateRequired( uint flags )
 
 int OcaTimeRuller::mapFromView( OcaTrackGroup* group, double t ) const
 {
-  return isfinite( t ) ? ( t - group->getViewPosition() ) / m_timeScale + m_zeroOffset : -1;
+  return std::isfinite( t ) ? ( t - group->getViewPosition() ) / m_timeScale + m_zeroOffset : -1;
 }
 
 // -----------------------------------------------------------------------------

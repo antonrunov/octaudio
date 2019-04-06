@@ -22,6 +22,7 @@
 
 #include <QtCore>
 #include <QtGui>
+#include <QtWidgets>
 
 #include <fcntl.h>
 #include <unistd.h>

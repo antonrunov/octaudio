@@ -496,7 +496,7 @@ uint OcaSmartTrack::updateDuration()
       }
     }
   }
-  if( isfinite( t1 - t0 ) ) {
+  if( std::isfinite( t1 - t0 ) ) {
     t1 -= t0;
   }
   else {

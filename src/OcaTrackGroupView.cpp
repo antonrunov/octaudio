@@ -1,5 +1,5 @@
 /*
-   Copyright 2013-2016 Anton Runov
+   Copyright 2013-2018 Anton Runov
 
    This file is part of Octaudio.
 
@@ -32,6 +32,7 @@
 
 #include <QtCore>
 #include <QtGui>
+#include <QtWidgets>
 
 static const int TIME_SCROLLBAR_RES = INT_MAX / 2 - 1000;
 
@@ -1133,6 +1134,13 @@ void OcaTrackGroupView::mouseReleaseEvent( QMouseEvent* event )
 void OcaTrackGroupView::wheelEvent( QWheelEvent* event )
 {
   bool processed = true;
+  static double distance = 0;
+  distance += event->delta();
+  const int MIN_WHEEL_STEP=40;
+
+  int n = round(distance / MIN_WHEEL_STEP);
+  distance -= n*MIN_WHEEL_STEP;
+  double d = -n*MIN_WHEEL_STEP/120.0;
 
   setCursor( Qt::ArrowCursor );
   switch( event->orientation() + event->modifiers() ) {
@@ -1143,19 +1151,19 @@ void OcaTrackGroupView::wheelEvent( QWheelEvent* event )
         double t = m_group->getViewPosition()
             + ( m_widget->mapFrom( this, event->pos() ).x() - getTrackMargin() ) * m_timeScale;
         setBasePosition( t, true );
-        moveTimeScale( 0 < event->delta() ? STEP : 1 / STEP );
+        moveTimeScale( pow(STEP, -d) );
       }
       break;
 
 
     // scroll_H_1 - Group:View:Move
     case Qt::Horizontal:
-      moveView( 0 < event->delta() ? -m_timeScale * 10 : m_timeScale * 10 );
+      moveView( m_timeScale*20*d );
       break;
 
     // scroll_H_2 - Group:View:Move(Fast)
     case Qt::Horizontal + Qt::ShiftModifier:
-      moveView( 0 < event->delta() ? -m_timeScale * 50 : m_timeScale * 50 );
+      moveView( m_timeScale*100*d );
       break;
 
     // scroll_H_6 - Group:View:Move(Fine)
@@ -1186,6 +1194,9 @@ void OcaTrackGroupView::wheelEvent( QWheelEvent* event )
 
   if( ! processed ) {
     QAbstractScrollArea::wheelEvent( event );
+  }
+  else {
+    event->accept();
   }
 }
 

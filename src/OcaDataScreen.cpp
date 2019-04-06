@@ -1,5 +1,5 @@
 /*
-   Copyright 2013-2016 Anton Runov
+   Copyright 2013-2018 Anton Runov
 
    This file is part of Octaudio.
 
@@ -28,6 +28,7 @@
 
 #include <QtCore>
 #include <QtGui>
+#include <QtWidgets>
 
 // -----------------------------------------------------------------------------
 // OcaDataScreen::DataBlock
@@ -264,7 +265,7 @@ OcaDataScreen::~OcaDataScreen()
 
 int OcaDataScreen::mapFromView( OcaTrackGroup* view, double t ) const
 {
-  return isfinite( t ) ? ( t - view->getViewPosition() ) / m_timeScale : -1;
+  return std::isfinite( t ) ? ( t - view->getViewPosition() ) / m_timeScale : -1;
 }
 
 // -----------------------------------------------------------------------------
@@ -482,23 +483,34 @@ void OcaDataScreen::mousePressEvent( QMouseEvent* event )
 void OcaDataScreen::wheelEvent( QWheelEvent* event )
 {
   bool processed = true;
+  static double distance = 0;
+  distance += event->delta();
+  const int MIN_WHEEL_STEP=40;
+
+  int n = round(distance / MIN_WHEEL_STEP);
+  distance -= n*MIN_WHEEL_STEP;
+  double d = -n*MIN_WHEEL_STEP/120.0;
+
 
   switch( event->orientation() + event->modifiers() ) {
 
     // scroll_V_3 - Track:VScale:MoveScale
     case  Qt::Vertical + Qt::ShiftModifier:
-      getTrackObject()->moveScale( 0 < event->delta() ? -1 : 1 );
+      getTrackObject()->moveScale( d );
       break;
 
     // scroll_V_4 - Track:VScale:MoveZero
     case  Qt::Vertical + Qt::AltModifier:
-      getTrackObject()->moveZero( 0 < event->delta() ? -1 : 1 );
+      getTrackObject()->moveZero( d );
       break;
     default:
       processed = false;
   }
   if( ! processed ) {
     QWidget::wheelEvent( event );
+  }
+  else {
+    event->accept();
   }
 }
 

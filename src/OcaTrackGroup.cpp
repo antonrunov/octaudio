@@ -28,6 +28,7 @@
 
 #include <QtCore>
 #include <QtGui>
+#include <QtWidgets>
 
 // ------------------------------------------------------------------------------------
 
@@ -191,7 +192,7 @@ double OcaTrackGroup::getRegionDuration() const
 {
   OcaLock lock( this );
   double dur = m_regionEnd - m_regionStart;
-  return isfinite(dur) ? dur : 0;
+  return std::isfinite(dur) ? dur : 0;
 }
 
 // ------------------------------------------------------------------------------------
@@ -201,7 +202,7 @@ double OcaTrackGroup::readPlaybackData( double t, double t_max, OcaRingBuffer* r
 {
   long len_read = 0;
   int length = rbuff->getAvailableSpace() / 2;
-  if( isfinite( t_max ) ) {
+  if( std::isfinite( t_max ) ) {
     length = qMin( length, qRound( ( t_max - t ) * rate ) );
   }
   if( 0 < length ) {
@@ -310,7 +311,7 @@ double OcaTrackGroup::writeRecordingData( double t, double t_max, OcaRingBuffer*
     }
   }
 
-  if( isfinite(t) ) {
+  if( std::isfinite(t) ) {
     int multi_mode = 0;
     if( track1 == track2 ) {
       multi_mode = ( 1 == track1->getChannels() ) ? 1 : 2;
@@ -325,7 +326,7 @@ double OcaTrackGroup::writeRecordingData( double t, double t_max, OcaRingBuffer*
       }
     }
     int length = rbuff->getAvailableLength() / 2;
-    if( isfinite( t_max ) ) {
+    if( std::isfinite( t_max ) ) {
       int tmp = qRound( ( t_max - t ) * rate );
       length = qMin( length, tmp );
       if( 0 >= tmp ) {
@@ -779,7 +780,7 @@ uint OcaTrackGroup::updateDuration()
       }
     }
   }
-  if( isfinite( t1 - t0 ) ) {
+  if( std::isfinite( t1 - t0 ) ) {
     t1 -= t0;
   }
   else {
