@@ -1,5 +1,5 @@
 /*
-   Copyright 2013-2016 Anton Runov
+   Copyright 2013-2018 Anton Runov
 
    This file is part of Octaudio.
 
@@ -34,7 +34,7 @@ OcaDialogAbout::OcaDialogAbout()
   QString s = QString( "<h3 align='center'> %1 </h3>" ).arg( OCA_VERSION_STRING );
 
   s.append( "<p align='center'>Audio Editor with GNU Octave Console" );
-  s.append( "<p align='center'>Copyright &copy; 2013-2016 Anton Runov" );
+  s.append( "<p align='center'>Copyright &copy; 2013-2018 Anton Runov" );
 
   s.append( "<pre><table width='100%'>" );
   s.append( QString( "<tr><td align='right'>Config:<td><td>%1</td></tr>").arg( OCA_CONFIG_BUILDTYPE ) );

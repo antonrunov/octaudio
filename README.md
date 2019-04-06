@@ -18,12 +18,11 @@ one can use the existing octave or matlab code directly in Octaudio.
 
 ##### Features
 
-- Runs on GNU/Linux, Mac OS X, and MS Windows, and can be compiled for the other
-  platforms.
+- Cross-platform.
 - Multitrack data viewer provides fast and reliable data displaying on almost arbitrary
   scale in both directions.
 - Track groups that are switched with tabs.
-- Double precision arithmetics for all data including time and sample rate values.
+- Double precision arithmetic for all data including time and sample rate values.
 - Multichannel, arbitrary length tracks.
 - Two displaying modes (Normal and Abs Value) for both zero centered (like audio data)
   and positive (amplitude, power, etc.) signals.
@@ -48,28 +47,10 @@ one can use the existing octave or matlab code directly in Octaudio.
 - See more information and screenshots on the [Octaudio wiki](https://github.com/antonrunov/octaudio/wiki).
 
 
-##### Installing
-
-First of all, Octaudio requires Octave to be installed. Pre-built binaries for Debian
-GNU/Linux, Windows (official MXE Octave 4.0 build), and Mac OS X (macports Octave
-installation) are available on the [releases](https://github.com/antonrunov/octaudio/releases) page.
-
-Installation instructions are in [doc/install.txt](doc/install.txt).
-
 ##### Building
 
-Build dependencies are [Octave](http://www.gnu.org/software/octave), [Qt4](http://download.qt.io/archive/qt),
+Build dependencies are [Octave](http://www.gnu.org/software/octave), [Qt5](http://download.qt.io/archive/qt),
 [Portaudio V19](http://www.portaudio.com), [libsamplerate](http://www.mega-nerd.com/SRC),
 and [CMake](http://www.cmake.org).
 See more detailed instructions in [doc/build.txt](doc/build.txt).
 
-##### Known issues and limitations
-
-Octaudio is in beta state now. While it is quite functional and relatively stable,
-some functionality is not implemented yet, or implemented partially. Below is incomplete
-list of the main issues.
-
-- Missing undo/redo functions.
-- UI functionality is insufficient sometimes, especially for monitors and multiple track
-  selection.
-- Multichannel track support is still at the basic level.

@@ -17,7 +17,7 @@
 
 cmake_minimum_required( VERSION 2.8 )
 project( octaudio )
-set( OCTAUDIO_VERSION "0.0.8" )
+set( OCTAUDIO_VERSION "1.0.0" )
 
 # Octave
 find_program( OCTAVE_CONFIG_EXECUTABLE octave-config )
@@ -314,7 +314,7 @@ endif()
 install( TARGETS "octaudio" RUNTIME DESTINATION "bin" BUNDLE DESTINATION "." )
 install( DIRECTORY "scripts/utils" "scripts/core" DESTINATION "${SHARE_PREFIX}share/octaudio/m" FILES_MATCHING PATTERN "*.m" )
 install( FILES "scripts/startup/octaudiorc" DESTINATION "${SHARE_PREFIX}share/octaudio/m/startup" )
-install( FILES "doc/build.txt" "doc/install.txt" "doc/shortcuts.txt" "COPYING" DESTINATION "${DOC_PREFIX}" )
+install( FILES "doc/build.txt" "doc/shortcuts.txt" "COPYING" DESTINATION "${DOC_PREFIX}" )
 if( OCTAUDIO_BUILD_HTMLDOC )
 install( FILES ${htmldoc_files} DESTINATION "${DOC_PREFIX}" )
 endif()
