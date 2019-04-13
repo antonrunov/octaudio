@@ -865,10 +865,10 @@ void OcaMainWindow::startAudioDuplex()
   OcaTrackGroup* group = m_data->getActiveGroup();
   if( NULL != group ) {
     double audioPosition = controller->startDefaultRecording( group );
-    if( isfinite( audioPosition ) ) {
+    if( std::isfinite( audioPosition ) ) {
       audioPosition = controller->startDefaultPlayback( group );
     }
-    if( ! isfinite( audioPosition ) ) {
+    if( ! std::isfinite( audioPosition ) ) {
       stopAudioAll();
     }
   }

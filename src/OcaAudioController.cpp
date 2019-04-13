@@ -136,7 +136,7 @@ double OcaAudioController::startDefaultPlayback( OcaTrackGroup* group )
       break;
 
     default:
-      if( isfinite( group->getRegionStart() ) ) {
+      if( std::isfinite( group->getRegionStart() ) ) {
         t = group->getRegionStart();
       }
       else {
@@ -178,7 +178,7 @@ double OcaAudioController::startPlayback( OcaTrackGroup* group, double t, double
       Q_ASSERT( e_StateStopped != m_stateRecording );
       Q_ASSERT( NULL != m_recordingBuffer );
       t = m_recordingCursor + m_recordingBuffer->getAvailableLength() / 2 / m_sampleRate;
-      Q_ASSERT( isfinite( t ) );
+      Q_ASSERT( std::isfinite( t ) );
     }
 
     PaStreamParameters output_parameters;
@@ -403,7 +403,7 @@ double OcaAudioController::startDefaultRecording( OcaTrackGroup* group )
       break;
 
     default:
-      if( isfinite( group->getRegionStart() ) ) {
+      if( std::isfinite( group->getRegionStart() ) ) {
         t = group->getRegionStart();
       }
       else {
@@ -447,7 +447,7 @@ double OcaAudioController::startRecording( OcaTrackGroup* group, double t, doubl
       Q_ASSERT( e_StateStopped != m_state );
       Q_ASSERT( NULL != m_playbackBuffer );
       t = m_playbackCursor - m_playbackBuffer->getAvailableLength() / 2 / m_sampleRate;
-      Q_ASSERT( isfinite( t ) );
+      Q_ASSERT( std::isfinite( t ) );
     }
 
     PaStreamParameters input_parameters;
@@ -491,7 +491,7 @@ double OcaAudioController::startRecording( OcaTrackGroup* group, double t, doubl
                                                                 m_recordingBuffer,
                                                                 m_sampleRate,
                                                                 true                       );
-    if( ! isfinite( m_recordingCursor ) ) {
+    if( ! std::isfinite( m_recordingCursor ) ) {
       break;
     }
     result = true;
@@ -902,7 +902,7 @@ void OcaAudioController::onTimer()
                                                                   m_recordingBuffer,
                                                                   m_sampleRate,
                                                                   false                       );
-      if( isfinite( m_recordingCursor ) && ( ! m_duplexStopRequested ) ) {
+      if( std::isfinite( m_recordingCursor ) && ( ! m_duplexStopRequested ) ) {
         flags |= e_FlagCursorChanged;
       }
       else {

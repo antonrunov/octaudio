@@ -250,7 +250,7 @@ void OcaTrackGroupView::setBasePositionAuto( bool force )
         ( m_group->getViewRightPosition() != m_autoBaseRight )    ) {
 
     if( m_basePosAuto || ( ! checkPosition( m_basePosition, 0.15, 0.15 ) ) ) {
-      if(   isfinite( m_audioPosition ) &&
+      if(   std::isfinite( m_audioPosition ) &&
           ( checkPosition( m_audioPosition, 0.15, 0.15 ) )  ) {
         m_basePosition = m_audioPosition;
       }
@@ -300,7 +300,7 @@ void OcaTrackGroupView::showTrackEnd()
 {
   OcaTrackBase* w = m_group->getActiveTrack();
   if( NULL != w ) {
-    if( isfinite( w->getEndTime() ) ) {
+    if( std::isfinite( w->getEndTime() ) ) {
       m_group->setViewEnd( w->getEndTime() );
     }
   }
@@ -312,7 +312,7 @@ void OcaTrackGroupView::showTrackStart()
 {
   OcaTrackBase* w = m_group->getActiveTrack();
   if( NULL != w ) {
-    if( isfinite( w->getStartTime() ) ) {
+    if( std::isfinite( w->getStartTime() ) ) {
       m_group->setViewPosition( w->getStartTime() );
     }
   }
@@ -334,7 +334,7 @@ void OcaTrackGroupView::showWholeTrack()
 
 void OcaTrackGroupView::centerAudioPos()
 {
-  if( isfinite( m_audioPosition ) ) {
+  if( std::isfinite( m_audioPosition ) ) {
     m_group->setViewCenter( m_audioPosition );
     setBasePosition( m_audioPosition, true );
   }
@@ -650,14 +650,14 @@ void OcaTrackGroupView::onUpdateRequired(   uint flags,
     bool autopos = false;
     if( controller->getRecordingGroup() == m_group ) {
       m_listener->setObjectMask( controller, OcaAudioController::e_FlagALL );
-      //autopos = ! isfinite( m_audioPosition );
+      //autopos = ! std::isfinite( m_audioPosition );
       autopos = true; // TODO
       m_audioPositionState = e_AudioPositionRecording;
       m_audioPosition = controller->getRecordingPosition();
     }
     else if( controller->getPlayedGroup() == m_group ) {
       m_listener->setObjectMask( controller, OcaAudioController::e_FlagALL );
-      //autopos = ! isfinite( m_audioPosition );
+      //autopos = ! std::isfinite( m_audioPosition );
       autopos = true; // TODO
       m_audioPositionState = e_AudioPositionPlayback;
       m_audioPosition = controller->getPlaybackPosition();
@@ -669,7 +669,7 @@ void OcaTrackGroupView::onUpdateRequired(   uint flags,
       m_audioPosition = NAN;
     }
 
-    if( autopos && isfinite( m_audioPosition ) ) {
+    if( autopos && std::isfinite( m_audioPosition ) ) {
       if( checkPosition( m_audioPosition, 0.0, 0.0 ) ) {
         setBasePosition( m_audioPosition, true );
       }
@@ -976,7 +976,7 @@ void OcaTrackGroupView::keyPressEvent ( QKeyEvent* key_event )
         OcaTrackBase* w = m_group->getActiveTrack();
         if( NULL != w ) {
           double t = ( Qt::Key_Home == key_event->key() ) ? w->getStartTime() : w->getEndTime();
-          if( isfinite( t ) ) {
+          if( std::isfinite( t ) ) {
             m_group->setCursorPosition( t );
             m_group->setViewPosition( t - 0.125 * m_group->getViewDuration() );
           }
