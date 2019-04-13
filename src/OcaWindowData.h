@@ -1,5 +1,5 @@
 /*
-   Copyright 2013-2016 Anton Runov
+   Copyright 2013-2019 Anton Runov
 
    This file is part of Octaudio.
 
@@ -25,6 +25,7 @@
 
 class OcaMonitor;
 class OcaTrackGroup;
+class Oca3DPlot;
 
 class OcaWindowData : public OcaObject
 {
@@ -50,6 +51,8 @@ class OcaWindowData : public OcaObject
       e_FlagMonitorRemoved      = 0x020,
       e_FlagNameChanged         = 0x040,
       e_FlagDefaultRateChanged  = 0x080,
+      e_Flag3DPlotAdded         = 0x100,
+      e_Flag3DPlotRemoved       = 0x200,
 
       e_FlagALL                 = 0xfff,
     };
@@ -76,6 +79,15 @@ class OcaWindowData : public OcaObject
     oca_index       addMonitor( OcaMonitor* );
     oca_index       removeMonitor( OcaMonitor* );
 
+#ifdef OCA_BUILD_3DPLOT
+    uint              get3DPlotCount() const;
+    oca_index         get3DPlotIndex( OcaObject* id ) const;
+    Oca3DPlot*        get3DPlotAt( oca_index idx ) const;
+    QList<Oca3DPlot*> find3DPlots( const QString& name ) const;
+    oca_index         add3DPlot( Oca3DPlot* );
+    oca_index         remove3DPlot( Oca3DPlot* );
+#endif
+
     double  getDefaultSampleRate() const { return m_defaultSampleRate; }
     bool    setDefaultSampleRate( double rate );
 
@@ -92,6 +104,9 @@ class OcaWindowData : public OcaObject
   protected slots:
     void onMonitorClosed( OcaObject* obj );
     void onGroupClosed( OcaObject* obj );
+#ifdef OCA_BUILD_3DPLOT
+    void on3DPlotClosed( OcaObject* obj );
+#endif
 
   protected:
     virtual void onClose();
@@ -100,6 +115,9 @@ class OcaWindowData : public OcaObject
     OcaTrackGroup*                m_activeGroup;
     OcaList<OcaTrackGroup,void>   m_groups;
     OcaList<OcaMonitor,void>      m_monitors;
+#ifdef OCA_BUILD_3DPLOT
+    OcaList<Oca3DPlot,void>       m_3DPlots;
+#endif
     double                        m_defaultSampleRate;
 };
 

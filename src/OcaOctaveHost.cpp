@@ -1,5 +1,5 @@
 /*
-   Copyright 2013-2016 Anton Runov
+   Copyright 2013-2019 Anton Runov
 
    This file is part of Octaudio.
 
@@ -29,6 +29,7 @@
 #include "OcaApp.h"
 #include "OcaWindowData.h"
 #include "OcaMonitor.h"
+#include "Oca3DPlot.h"
 #include "OcaAudioController.h"
 
 #include "octaudio_configinfo.h"
@@ -49,6 +50,7 @@ Q_DECLARE_METATYPE( OcaTrackBase* );
 Q_DECLARE_METATYPE( OcaTrack* );
 Q_DECLARE_METATYPE( OcaSmartTrack* );
 Q_DECLARE_METATYPE( OcaMonitor* );
+Q_DECLARE_METATYPE( Oca3DPlot* );
 Q_DECLARE_METATYPE( OcaTrackGroup* );
 
 // ----------------------------------------------------------------------------
@@ -620,6 +622,43 @@ static QList<OcaMonitor*> id_to_monitor_list( octave_value_list args, int id )
   OcaWrapperMonitor container( OcaOctaveHost::getWindowData() );
   return get_objects<OcaMonitor,OcaWrapperMonitor>( safe_arg(args,id), &container );
 }
+
+#ifdef OCA_BUILD_3DPLOT
+// ----------------------------------------------------------------------------
+
+class OcaWrapper3DPlot
+{
+  public:
+    OcaWrapper3DPlot( OcaWindowData* data ) : m_data( data ) {}
+    bool            isNull() const { return ( NULL == m_data ); }
+    Oca3DPlot*      getActiveItem() const { return m_data->get3DPlotAt( 0 ); }
+    Oca3DPlot*      getItemAt( oca_index idx ) const { return m_data->get3DPlotAt( idx ); }
+
+    QList<Oca3DPlot*> findItems( const QString& name ) const
+    {
+      return m_data->find3DPlots( name );
+    }
+
+  protected:
+    OcaWindowData* m_data;
+};
+
+// ----------------------------------------------------------------------------
+
+static Oca3DPlot* id_to_3dplot( octave_value_list args, int id )
+{
+  OcaWrapper3DPlot container( OcaOctaveHost::getWindowData() );
+  return get_object<Oca3DPlot,OcaWrapper3DPlot>( safe_arg(args,id), &container );
+}
+
+// ----------------------------------------------------------------------------
+
+static QList<Oca3DPlot*> id_to_3dplot_list( octave_value_list args, int id )
+{
+  OcaWrapper3DPlot container( OcaOctaveHost::getWindowData() );
+  return get_objects<Oca3DPlot,OcaWrapper3DPlot>( safe_arg(args,id), &container );
+}
+#endif //OCA_BUILD_3DPLOT
 
 // ----------------------------------------------------------------------------
 
@@ -1732,6 +1771,207 @@ OCA_BUILTIN(  monitor_setprop,
   return octave_value( set_oca_properties( list, args ) );
 }
 
+#ifdef OCA_BUILD_3DPLOT
+// ----------------------------------------------------------------------------
+// 3dplot
+
+OCA_BUILTIN(  plot3d_add,
+              "[ID, idx] = oca_plot3d_add( name, [group_id] )"  )
+{
+  octave_value_list retval;
+  octave_value name = safe_arg( args, 0 );
+  if( ! name.is_string() ) {
+    print_usage();
+  }
+  else {
+    //OcaTrackGroup* group = id_to_group( args, 1 ); // TODO
+    Oca3DPlot* plot = new Oca3DPlot( OCA_STR(name) /* TODO: , group*/ );
+    retval(0) = ndarray_from_ocaobj( plot );
+    retval(1) = OcaOctaveHost::getWindowData()->add3DPlot( plot ) + 1;
+  }
+  return retval;
+}
+
+// ----------------------------------------------------------------------------
+
+OCA_BUILTIN(  plot3d_remove,
+              "ret = oca_plot3d_remove( [ids] )"   )
+{
+  octave_value retval;
+  QList<Oca3DPlot*> list = id_to_3dplot_list( args, 0 );
+  int counter = 0;
+  for( int i = 0; i < list.size(); i++ ) {
+    list.at(i)->close();
+    counter++;
+  }
+  retval = counter;
+  return retval;
+}
+
+// ----------------------------------------------------------------------------
+
+OCA_BUILTIN(  plot3d_list,
+              "[list] = oca_plot3d_list()"   )
+{
+  octave_value retval;
+  OcaWindowData* wd = OcaOctaveHost::getWindowData();
+  OcaLock lock( wd );
+  Cell c( 1, wd->get3DPlotCount() );
+  for( uint i = 0; i < wd->get3DPlotCount(); i++ ) {
+    if( 0 != nargout ) {
+      c(i) = ndarray_from_ocaobj( wd->get3DPlotAt(i) );
+    }
+    else {
+      printf( "%4d    %s\n", i, OCA_CSTR( wd->get3DPlotAt(i)->getName() ) );
+    }
+  }
+  if( 0 != nargout ) {
+    retval = c;
+  }
+  return retval;
+}
+
+// ----------------------------------------------------------------------------
+
+OCA_BUILTIN(  plot3d_count,
+              "count = oca_plot3d_count()"   )
+{
+  octave_value retval;
+  retval = OcaOctaveHost::getWindowData()->get3DPlotCount();
+  return retval;
+}
+
+// ----------------------------------------------------------------------------
+
+OCA_BUILTIN(  plot3d_find,
+              "IDs = oca_plot3d_find( ids )"   )
+{
+  octave_value retval;
+  octave_value val_id = safe_arg( args, 0 );
+  if( ! val_id.is_defined() ) {
+    print_usage();
+  }
+  else if ( val_id.is_cell() ) {
+    QList<Oca3DPlot*> list = id_to_3dplot_list( args, 0 );
+    Cell c( 1, list.size() );
+    for( int i = 0; i < list.size(); i++ ) {
+      c(i) = ndarray_from_ocaobj( list.at(i) );
+    }
+    retval = c;
+  }
+  else {
+    Oca3DPlot* plot = id_to_3dplot( args, 0 );
+    retval = ndarray_from_ocaobj( plot );
+  }
+  return retval;
+}
+
+// ----------------------------------------------------------------------------
+
+OCA_BUILTIN(  plot3d_getprop,
+              "vals = oca_plot3d_getprop( [names], [ids] )" )
+{
+  octave_value retval;
+  QList<Oca3DPlot*> list = id_to_3dplot_list( args, 1 );
+  retval = get_oca_properties( list, args );
+  return retval;
+}
+
+// ----------------------------------------------------------------------------
+
+OCA_BUILTIN(  plot3d_setprop,
+              "ret = oca_plot3d_setprop( name, val, [ids] )\n"
+              "ret = oca_plot3d_setprop( props, [ids] )"  )
+{
+
+  QList<Oca3DPlot*> list = id_to_3dplot_list( args, is_prop_args_map( args ) ? 1 : 2 );
+  return octave_value( set_oca_properties( list, args ) );
+}
+
+// ----------------------------------------------------------------------------
+
+OCA_BUILTIN(  plot3d_set,
+              "vals = oca_plot3d_set( data, [id] )" )
+{
+  octave_value retval;
+  Oca3DPlot* p = id_to_3dplot( args, 1 );
+  if (NULL == p) {
+    error( "no 3d plot" );
+    return retval;
+  }
+  octave_value val_data = safe_arg( args, 0 );
+  //octave_value val_texture = safe_arg( args, 1 );
+  NDArray arData;
+  NDArray arTexture;
+  if(!val_data.is_real_type()) {
+    error( "invalid data" );
+  }
+  /*
+  else if (val_texture.is_defined() && !val_texture.is_real_type() ) {
+    error( "invalid texture" );
+  }
+  */
+  else {
+    arData = val_data.array_value();
+    int nx = arData.dim1();
+    int ny = arData.dim2();
+    double* data = arData.fortran_vec();
+    double* texture = NULL;
+    /*
+    if (val_texture.is_real_type()) {
+      arTexture = val_texture.array_value();
+      if ( arTexture.dim1() != nx || arTexture.dim2() != ny ) {
+        error( "invalid texture" );
+      }
+      else {
+        texture = arTexture.fortran_vec();
+      }
+    }
+    */
+    if( ! p->setData(nx, ny, data, texture) ) {
+      error("failed");
+    }
+  }
+
+  return retval;
+}
+
+// ----------------------------------------------------------------------------
+
+OCA_BUILTIN(  plot3d_settexture,
+              "vals = oca_plot3d_settexture( texture, [id] )" )
+{
+  octave_value retval;
+  Oca3DPlot* p = id_to_3dplot( args, 1 );
+  if (NULL == p) {
+    error( "no 3d plot" );
+    return retval;
+  }
+  octave_value val_texture = safe_arg( args, 0 );
+  NDArray arTexture;
+  if (!val_texture.is_real_type() ) {
+    error( "invalid texture" );
+  }
+  else {
+    arTexture = val_texture.array_value();
+    int nx = arTexture.dim1();
+    int ny = arTexture.dim2();
+    double* texture = NULL;
+    if ( p->getXLen() == nx || p->getYLen() == ny ) {
+      texture = arTexture.fortran_vec();
+    }
+    else if(!arTexture.is_empty()) {
+      error( "invalid texture size" );
+    }
+    if( ! p->setTexture(nx, ny, texture) ) {
+      error("failed");
+    }
+  }
+
+  return retval;
+}
+#endif // OCA_BUILD_3DPLOT
+
 // ----------------------------------------------------------------------------
 // subtrack
 
@@ -2102,6 +2342,9 @@ void OcaOctaveHost::initialize()
   qRegisterMetaType<OcaSmartTrack*>("OcaSmartTrack*");
   qRegisterMetaType<OcaMonitor*>("OcaMonitor*");
   qRegisterMetaType<OcaTrackGroup*>("OcaTrackGroup*");
+#ifdef OCA_BUILD_3DPLOT
+  qRegisterMetaType<Oca3DPlot*>("Oca3DPlot*");
+#endif
 
   QString prefix = OCA_STR( octave_env::getenv( "OCTAUDIO_PREFIX" ) );
   if( prefix.isEmpty() ) {
@@ -2165,6 +2408,18 @@ void OcaOctaveHost::initialize()
   INSTALL_OCA_BUILTIN( monitor_getprop );
   INSTALL_OCA_BUILTIN( monitor_setprop );
   INSTALL_OCA_BUILTIN( monitor_find );
+
+#ifdef OCA_BUILD_3DPLOT
+  INSTALL_OCA_BUILTIN( plot3d_add );
+  INSTALL_OCA_BUILTIN( plot3d_remove );
+  INSTALL_OCA_BUILTIN( plot3d_list );
+  INSTALL_OCA_BUILTIN( plot3d_count );
+  INSTALL_OCA_BUILTIN( plot3d_find );
+  INSTALL_OCA_BUILTIN( plot3d_getprop );
+  INSTALL_OCA_BUILTIN( plot3d_setprop );
+  INSTALL_OCA_BUILTIN( plot3d_set );
+  INSTALL_OCA_BUILTIN( plot3d_settexture );
+#endif
 
   INSTALL_OCA_BUILTIN( subtrack_add );
   INSTALL_OCA_BUILTIN( subtrack_remove );

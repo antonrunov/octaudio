@@ -1,4 +1,4 @@
-## Copyright 2013-2018 Anton Runov
+## Copyright 2013-2019 Anton Runov
 ##
 ## This file is part of Octaudio.
 ##
@@ -17,7 +17,7 @@
 
 cmake_minimum_required( VERSION 2.8 )
 project( octaudio )
-set( OCTAUDIO_VERSION "1.0.0" )
+set( OCTAUDIO_VERSION "1.1.0" )
 
 # Octave
 find_program( OCTAVE_CONFIG_EXECUTABLE octave-config )
@@ -55,7 +55,16 @@ endif()
 
 # Qt
 find_package( Qt5 REQUIRED Core Widgets Gui Network )
+find_package( Qt5 QUIET OPTIONAL_COMPONENTS DataVisualization)
 add_definitions(${QT_DEFINITIONS})
+
+# QtDataVisualisation
+if(TARGET Qt5::DataVisualization )
+  list( APPEND EXTRA_LIBS Qt5::DataVisualization )
+  add_definitions( -DOCA_BUILD_3DPLOT )
+else()
+  message( STATUS "Qt5::DataVisualization not found" )
+endif()
 
 # libsamplerate
 find_path( SAMPLERATE_INCLUDES samplerate.h )
@@ -269,6 +278,20 @@ set( octaudio_HEADERS_MOC
   src/OcaScaleControl.h
   )
 
+if(TARGET Qt5::DataVisualization )
+  list( APPEND octaudio_SRC
+    src/OcaDialogProperties3DPlot.cpp
+    src/Oca3DPlot.cpp
+    src/Oca3DPlotDock.cpp
+  )
+
+  list( APPEND octaudio_HEADERS_MOC
+    src/OcaDialogProperties3DPlot.h
+    src/Oca3DPlot.h
+    src/Oca3DPlotDock.h
+  )
+endif()
+
 QT5_WRAP_CPP( octaudio_MOC ${octaudio_HEADERS_MOC} )
 
 add_custom_command( OUTPUT octaudio_buildinfo.cpp
@@ -284,7 +307,7 @@ add_library( buildinfo OBJECT EXCLUDE_FROM_ALL octaudio_buildinfo.cpp )
 list( APPEND octaudio_SRC $<TARGET_OBJECTS:buildinfo> )
 
 add_executable( octaudio ${GUI_TYPE} ${octaudio_SRC} ${octaudio_MOC} )
-target_link_libraries( octaudio ${OCTAVE_LIBRARIES} ${PORTAUDIO_LIBRARY} ${EXTRA_LIBS} Qt5::Core Qt5::Widgets Qt5::Gui Qt5::Network )
+target_link_libraries( octaudio ${OCTAVE_LIBRARIES} ${PORTAUDIO_LIBRARY} ${EXTRA_LIBS} Qt5::Core Qt5::Widgets Qt5::Gui Qt5::Network)
 set_target_properties( octaudio PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME Octaudio )
 
 if( OCTAUDIO_USE_TIMESTAMP OR OCTAUDIO_USE_GIT_REVISION )

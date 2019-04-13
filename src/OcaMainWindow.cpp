@@ -1,5 +1,5 @@
 /*
-   Copyright 2013-2016 Anton Runov
+   Copyright 2013-2019 Anton Runov
 
    This file is part of Octaudio.
 
@@ -34,6 +34,9 @@
 #include "OcaDialogPropertiesSmartTrack.h"
 #include "OcaDialogPreferences.h"
 #include "OcaDialogAbout.h"
+#include "OcaDialogProperties3DPlot.h"
+#include "Oca3DPlot.h"
+#include "Oca3DPlotDock.h"
 
 #include "images/toolbar_icons.h"
 
@@ -222,6 +225,9 @@ void OcaMainWindow::createMenus()
                                                         SLOT(addMonitorWithSelectedTracks()) );
   addDisabledAction( tr("Properties"), 0, m_viewMonitorMenu, SLOT(openMonitorProperties()) );
 
+#ifdef OCA_BUILD_3DPLOT
+  addWindowAction( tr("New 3DPlot..."), 0, m_viewMenu, SLOT(openNew3DPlotDlg()) );
+#endif
 
   m_trackMenu             = menuBar()->addMenu( tr("Track") );
   m_trackMenuNew          = m_trackMenu->addMenu( tr("New") );
@@ -530,6 +536,32 @@ void OcaMainWindow::onUpdateRequired( uint flags, QHash<QString,uint>& cum_flags
     }
   }
 
+#ifdef OCA_BUILD_3DPLOT
+  const uint plot_flags =    OcaWindowData::e_Flag3DPlotRemoved
+                              | OcaWindowData::e_Flag3DPlotAdded;
+
+  if( plot_flags & flags ) {
+    OcaLock lock( m_data );
+    // remove 3dplot docks
+    QMutableHashIterator<Oca3DPlot*,QDockWidget*> it(m_3DPlotDocks);
+    while (it.hasNext()) {
+      it.next();
+      if( 0 > m_data->get3DPlotIndex( it.key() ) ) {
+        delete it.value();
+        it.remove();
+      }
+    }
+    // add 3dplot docks
+    for( uint idx = 0; idx < m_data->get3DPlotCount(); idx++ ) {
+      Oca3DPlot* d = m_data->get3DPlotAt( idx );
+      Q_ASSERT( NULL != d );
+      if( ! m_3DPlotDocks.contains( d ) ) {
+        add3DPlotDock( d );
+      }
+    }
+  }
+#endif
+
   bool update_tabs = false;
   bool update_current_group = false;
   bool update_title = ( OcaWindowData::e_FlagNameChanged & flags );
@@ -751,6 +783,17 @@ void OcaMainWindow::addMonitorWithSelectedTracks()
     m_data->addMonitor( d );
   }
 }
+
+// -----------------------------------------------------------------------------
+
+#ifdef OCA_BUILD_3DPLOT
+void OcaMainWindow::openNew3DPlotDlg()
+{
+  Oca3DPlot* plot = new Oca3DPlot("3dplot") ;
+  OcaDialogProperties3DPlot* dlg = new OcaDialogProperties3DPlot( plot, true );
+  dlg->show();
+}
+#endif
 
 // -----------------------------------------------------------------------------
 
@@ -1236,6 +1279,17 @@ void OcaMainWindow::closeEvent ( QCloseEvent * ev )
     m_data->close();
   }
 };
+
+// -----------------------------------------------------------------------------
+
+#ifdef OCA_BUILD_3DPLOT
+void OcaMainWindow::add3DPlotDock(Oca3DPlot* plot)
+{
+  Oca3DPlotDock* dock = new Oca3DPlotDock(plot);
+  addDockWidget( Qt::RightDockWidgetArea, dock );
+  m_3DPlotDocks.insert( plot, dock );
+}
+#endif
 
 // -----------------------------------------------------------------------------
 

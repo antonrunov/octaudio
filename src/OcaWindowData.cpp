@@ -1,5 +1,5 @@
 /*
-   Copyright 2013-2016 Anton Runov
+   Copyright 2013-2019 Anton Runov
 
    This file is part of Octaudio.
 
@@ -20,6 +20,7 @@
 #include "OcaWindowData.h"
 
 #include "OcaMonitor.h"
+#include "Oca3DPlot.h"
 #include "OcaTrackGroup.h"
 #include "OcaApp.h"
 #include "OcaInstance.h"
@@ -84,6 +85,16 @@ QList<OcaMonitor*> OcaWindowData::findMonitors( const QString& name ) const
   OcaLock lock( this );
   return m_monitors.findItemsByName( name );
 }
+
+// ------------------------------------------------------------------------------------
+
+#ifdef OCA_BUILD_3DPLOT
+QList<Oca3DPlot*> OcaWindowData::find3DPlots( const QString& name ) const
+{
+  OcaLock lock( this );
+  return m_3DPlots.findItemsByName( name );
+}
+#endif
 
 // ------------------------------------------------------------------------------------
 
@@ -266,6 +277,86 @@ void OcaWindowData::onMonitorClosed( OcaObject* obj )
   removeMonitor( d );
 }
 
+#ifdef OCA_BUILD_3DPLOT
+// ------------------------------------------------------------------------------------
+
+uint OcaWindowData::get3DPlotCount() const
+{
+  OcaLock lock( this );
+  return m_3DPlots.getLength();
+}
+
+// ------------------------------------------------------------------------------------
+
+oca_index OcaWindowData::get3DPlotIndex( OcaObject* id ) const
+{
+  OcaLock lock( this );
+  return m_3DPlots.findItemIndex( id );
+}
+
+// ------------------------------------------------------------------------------------
+
+Oca3DPlot* OcaWindowData::get3DPlotAt( oca_index idx ) const
+{
+  OcaLock lock( this );
+  return m_3DPlots.getItem( idx );
+}
+
+// ------------------------------------------------------------------------------------
+
+oca_index OcaWindowData::add3DPlot( Oca3DPlot* plot )
+{
+  oca_index idx = -1;
+  uint flags = 0;
+  {
+    WLock lock( this );
+    idx = m_3DPlots.appendItem( plot );
+    if( -1 != idx ) {
+      if( ! connectObject( plot, SLOT(on3DPlotClosed(OcaObject*)) ) ) {
+        m_3DPlots.removeItem( plot );
+      }
+      else {
+        flags = e_Flag3DPlotAdded;
+      }
+    }
+  }
+
+  emitChanged( plot, flags );
+  return idx;
+}
+
+// ------------------------------------------------------------------------------------
+
+oca_index OcaWindowData::remove3DPlot( Oca3DPlot* plot )
+{
+  oca_index idx = -1;
+  uint flags = 0;
+  {
+    WLock lock( this );
+    idx = m_3DPlots.removeItem( plot );
+    disconnectObject( plot );
+    if( -1 != idx ) {
+      flags = e_Flag3DPlotRemoved;
+    }
+  }
+
+  emitChanged( plot, flags );
+  return idx;
+}
+
+// ------------------------------------------------------------------------------------
+
+void OcaWindowData::on3DPlotClosed( OcaObject* obj )
+{
+  if( isClosed() ) {
+    return;
+  }
+  Oca3DPlot* d = qobject_cast<Oca3DPlot*>( obj );
+  Q_ASSERT( NULL != d );
+  remove3DPlot( d );
+}
+#endif // OCA_BUILD_3DPLOT
+
 // ------------------------------------------------------------------------------------
 
 void OcaWindowData::onGroupClosed( OcaObject* obj )
@@ -293,7 +384,15 @@ void OcaWindowData::onClose()
       list.append( m_monitors.getItem( idx ) );
     }
     m_monitors.clear();
+
+#ifdef OCA_BUILD_3DPLOT
+    for( oca_index idx = m_3DPlots.getLength() - 1; idx >=0; idx-- ) {
+      list.append( m_3DPlots.getItem( idx ) );
+    }
+    m_3DPlots.clear();
+#endif
     m_activeGroup = NULL;
+
   }
 
   for( int i = 0; i < list.size(); i++ ) {

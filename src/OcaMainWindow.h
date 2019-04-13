@@ -1,5 +1,5 @@
 /*
-   Copyright 2013-2016 Anton Runov
+   Copyright 2013-2019 Anton Runov
 
    This file is part of Octaudio.
 
@@ -29,6 +29,7 @@
 
 class OcaConsole;
 class OcaMonitor;
+class Oca3DPlot;
 class QMenu;
 class OcaTrackBase;
 class OcaWindowData;
@@ -95,6 +96,9 @@ class OcaMainWindow : public QMainWindow
     OcaObjectListener*  m_listener;
 
     QHash<OcaMonitor*,QDockWidget*>           m_monitorDocks;
+#ifdef OCA_BUILD_3DPLOT
+    QHash<Oca3DPlot*,QDockWidget*>            m_3DPlotDocks;
+#endif
     OcaList<OcaTrackGroup,OcaTrackGroupView>  m_views;
 
   protected:
@@ -127,6 +131,9 @@ class OcaMainWindow : public QMainWindow
     void connectGroupView( OcaTrackGroupView* view );
 
     void addMonitorDock( OcaMonitor* monitor );
+#ifdef OCA_BUILD_3DPLOT
+    void add3DPlotDock( Oca3DPlot* plot );
+#endif
 
   protected slots:
     void onUpdateRequired( uint flags, QHash<QString,uint>& cum_flags,
@@ -190,6 +197,9 @@ class OcaMainWindow : public QMainWindow
     void stopAudioPlayback();
     void stopAudioRecording();
 
+#ifdef OCA_BUILD_3DPLOT
+    void openNew3DPlotDlg();
+#endif
 
   protected slots:
     void runCommand( const QString& command );
