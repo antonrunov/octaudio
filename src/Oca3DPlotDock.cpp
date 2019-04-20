@@ -232,12 +232,12 @@ void Oca3DPlotDock::updateData()
       }
       else {
         int vc = (v - z_min)*z_colorK;
-        img.setPixelColor(jt, jj, QColor(qBound(0,50+4*vc,255),
-                                  qBound(0,210-vc,255), qBound(0,220-2*vc,255)) );
+        img.setPixel(jt, jj, QColor(qBound(0,50+4*vc,255),
+                                    qBound(0,210-vc,255), qBound(0,220-2*vc,255)).rgb() );
       }
       if (NULL != p) {
         if (0 != p->alpha()) {
-          img.setPixelColor(jt, jj, *p );
+          img.setPixel(jt, jj, p->rgb() );
         }
         ++p;
       }

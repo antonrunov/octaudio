@@ -1,4 +1,4 @@
-## Copyright 2013-2016 Anton Runov
+## Copyright 2013-2019 Anton Runov
 ##
 ## This file is part of Octaudio.
 ##
@@ -18,8 +18,10 @@
 ## oca_loadwav( filename, [track], [mono] )
 
 function oca_loadwav( filename, track=[], mono=false )
-  fs = nthargout( 2, @wavread, filename, 1 );
-  [len, ch] = wavread( filename, 'size' );
+  info = audioinfo(filename);
+  fs = info.SampleRate;
+  len = info.TotalSamples;
+  ch = info.NumChannels;
   if mono
     ch = 1;
   end
@@ -42,7 +44,7 @@ function oca_loadwav( filename, track=[], mono=false )
   block_sz = fs*1000;
 
   while res < len
-    x = wavread( filename, res + [1,min(block_sz,len-res)] )';
+    x = audioread( filename, res + [1,min(block_sz,len-res)] )';
     if mono
       x = mean( x, 1 );
     end

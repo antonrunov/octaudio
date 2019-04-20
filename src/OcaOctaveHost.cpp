@@ -36,10 +36,16 @@
 
 #include <QtCore>
 
+#define CHECK_OCTAVE_VERSION(major,minor) ( (OCTAVE_MAJOR_VERSION > major) || (OCTAVE_MAJOR_VERSION == major && OCTAVE_MINOR_VERSION >= minor) )
+
 #include <octave/oct.h>
 #include <octave/parse.h>
 #include <octave/octave.h>
+#if CHECK_OCTAVE_VERSION(4,2)
+#include <octave/interpreter.h>
+#else
 #include <octave/toplev.h>
+#endif
 #include <octave/input.h>
 #include <octave/quit.h>
 #include <octave/cmd-edit.h>
@@ -53,9 +59,28 @@ Q_DECLARE_METATYPE( OcaMonitor* );
 Q_DECLARE_METATYPE( Oca3DPlot* );
 Q_DECLARE_METATYPE( OcaTrackGroup* );
 
+// changing API is never nice
+#if CHECK_OCTAVE_VERSION(4,4)
+  #define is_empty isempty
+  #define is_cellstr iscellstr
+  #define is_cell iscell
+  #define is_map isstruct
+  #define is_vector isvector
+  #define is_real_type isreal
+  #define is_numeric_type isnumeric
+  #define is_integer_type isinteger
+  #define eval_string octave::eval_string
+  #define feval octave::feval
+  #define recover_from_exception octave::interpreter::recover_from_exception
+#endif
+
+#if CHECK_OCTAVE_VERSION(4,2)
+  #define octave_execution_exception octave::execution_exception
+  #define octave_interrupt_exception octave::interrupt_exception
+#endif
+
 // ----------------------------------------------------------------------------
 // static octave functions
-
 
 // @deftypefn {OctAudio Function} {retval =} __version_info__ (@var{name}, @var{version}, @var{release}, @var{date})
 const char* DOC_STRING_STUB =
@@ -104,7 +129,7 @@ static NDArray ndarray_from_ocaobj( const OcaObject* obj )
 static oca_ulong id_from_ndarray_tmp( NDArray ar )
 {
   oca_ulong id = 0;
-  if( ar.length() == sizeof(oca_ulong)/2 ) {
+  if( ar.numel() == sizeof(oca_ulong)/2 ) {
     for( uint i = 0; i < sizeof(oca_ulong)/2; i++ ) {
       id += ((oca_ulong)ar(i)) << ( 16*i );
     }
@@ -288,8 +313,8 @@ static octave_value get_oca_properties( QList<T*> obj_list,
       OcaLock lock( obj );
       if( args(0).is_cellstr() ) {
         Array<std::string> names = args(0).cellstr_value();
-        Cell props( 1, names.length() );
-        for( int i = 0; i < names.length(); i++ ) {
+        Cell props( 1, names.numel() );
+        for( int i = 0; i < names.numel(); i++ ) {
           props( 0, i ) = get_oca_property( obj, names(i), prop_proxy );
         }
         retval = props;
@@ -360,7 +385,7 @@ static QVariant octave_value_to_qvariant( const octave_value& val, int type )
     case QVariant::Color:
       if( val.is_real_matrix() ) {
         int32NDArray ar = val.array_value();
-        if( 3 == ar.length() ) {
+        if( 3 == ar.numel() ) {
           result = QColor( ar(0), ar(1), ar(2) );
         }
       }
@@ -486,7 +511,7 @@ QList<Item*> get_objects( const octave_value& id_val, Container* container, bool
   }
   else if( id_val.is_cell() ) {
     Cell c = id_val.cell_value();
-    for( oca_index idx = 0; idx < c.length(); idx++ ) {
+    for( oca_index idx = 0; idx < c.numel(); idx++ ) {
       result.append( get_objects<Item,Container>( c(idx), container, false ) );
     }
   }
@@ -879,7 +904,7 @@ static NDArray get_time_spec( octave_value t_spec_val, OcaTrack* track, OcaTrack
   }
   else if( t_spec_val.is_real_matrix() ) {
     NDArray t_spec = t_spec_val.array_value();
-    if( 2 != t_spec.length() ) {
+    if( 2 != t_spec.numel() ) {
       error( "invalid t_spec" );
     }
     else {
@@ -1158,7 +1183,7 @@ OCA_BUILTIN(  data_get,
     NDArray t_spec = get_time_spec( safe_arg( args, 0 ), track, group );
     NDArray ar;
     double t0_true = NAN;
-    if( 2 == t_spec.length() ) {
+    if( 2 == t_spec.numel() ) {
       OcaBlockListData data;
       track->getData( &data, t_spec(0), t_spec(1) );
 
@@ -1166,7 +1191,7 @@ OCA_BUILTIN(  data_get,
         const OcaDataVector* block = data.getBlock( 0 );
         if( 0 < block->length() ) {
           ar = NDArray( dim_vector( block->channels(), block->length() ) );
-          memcpy( ar.fortran_vec(), block->constData(), ar.nelem() * sizeof(double) );
+          memcpy( ar.fortran_vec(), block->constData(), ar.numel() * sizeof(double) );
           t0_true = data.getTime( 0 );
         }
       }
@@ -1209,7 +1234,7 @@ OCA_BUILTIN(  data_set,
       double t = val_t.double_value();
       NDArray ar = val_data.array_value();
       int channels = track->getChannels();
-      int length = ar.length();
+      int length = ar.numel();
       if( 1 < channels ) {
         if( ar.dim1() == channels ) {
           length = ar.dim2();
@@ -1278,7 +1303,7 @@ OCA_BUILTIN(  data_listblocks,
       t_spec_val = "all";
     }
     NDArray t_spec = get_time_spec( t_spec_val, track, group );
-    if( 2 == t_spec.length() ) {
+    if( 2 == t_spec.numel() ) {
       OcaBlockListInfo data;
       track->getDataBlocksInfo( &data, t_spec(0), t_spec(1) );
       ar = ndarray_from_track_info( data, track->getSampleRate() );
@@ -1302,7 +1327,7 @@ static octave_value_list process_data_blocks( const octave_value_list& args, int
     Q_ASSERT( NULL != group );
     octave_value t_spec_val = safe_arg( args, 0 );
     NDArray t_spec = get_time_spec( t_spec_val, track, group );
-    if( 2 == t_spec.length() ) {
+    if( 2 == t_spec.numel() ) {
       OcaBlockListData data;
       if( cut ) {
         if( 0 < nargout ) {
@@ -1323,7 +1348,7 @@ static octave_value_list process_data_blocks( const octave_value_list& args, int
           const OcaDataVector* block = data.getBlock( i );
           if( 0 < block->length() ) {
             NDArray ar( dim_vector( block->channels(), block->length() ) );
-            memcpy( ar.fortran_vec(), block->constData(), ar.nelem() * sizeof(double) );
+            memcpy( ar.fortran_vec(), block->constData(), ar.numel() * sizeof(double) );
             starts(i) = data.getTime( i );
             c(i) = ar;
           }
@@ -1407,7 +1432,7 @@ OCA_BUILTIN(  data_join,
       t_spec_val = "region";
     }
     NDArray t_spec = get_time_spec( t_spec_val, track, group );
-    if( 2 == t_spec.length() ) {
+    if( 2 == t_spec.numel() ) {
       if( 0 == t_spec(1) ) {
         error( "zero duration specified" );
       }
@@ -1439,7 +1464,7 @@ OCA_BUILTIN(  data_moveblocks,
     Q_ASSERT( NULL != group );
     octave_value t_spec_val = safe_arg( args, 1 );
     NDArray t_spec = get_time_spec( t_spec_val, track, group );
-    if( 2 == t_spec.length() ) {
+    if( 2 == t_spec.numel() ) {
       dt = track->moveBlocks( dt_val.double_value(), t_spec(0), t_spec(1) );
     }
   }
@@ -1466,7 +1491,7 @@ OCA_BUILTIN(  data_fill,
     Q_ASSERT( NULL != group );
     octave_value t_spec_val = safe_arg( args, 1 );
     NDArray t_spec = get_time_spec( t_spec_val, track, group );
-    if( 2 == t_spec.length() ) {
+    if( 2 == t_spec.numel() ) {
       double t = t_spec(0);
       double dur = t_spec(1);
       if( ( ! std::isfinite( dur ) ) || ( 0.0 > dur ) ) {
@@ -1474,7 +1499,7 @@ OCA_BUILTIN(  data_fill,
       }
       NDArray pat = dt_pat.array_value();
       int channels = track->getChannels();
-      int length = pat.length();
+      int length = pat.numel();
       if( 1 < channels ) {
         if( pat.dim1() == channels ) {
           length = pat.dim2();
@@ -2327,12 +2352,21 @@ static void install_octaudio_builtin(   octave_builtin::fcn function,
                                         const char* doc_string = DOC_STRING_STUB )
 {
   octave_function* fcn = new octave_builtin ( function, function_name, doc_string );
+#if CHECK_OCTAVE_VERSION(4,4)
+  octave::interpreter::the_interpreter()->get_symbol_table().install_built_in_function ( function_name, fcn );
+#else
   symbol_table::install_built_in_function ( function_name, fcn );
+#endif
 }
 
 // ----------------------------------------------------------------------------
 
 #define INSTALL_OCA_BUILTIN( name ) install_octaudio_builtin( name, "oca_"#name, name##_doc_string )
+
+#if CHECK_OCTAVE_VERSION(4,2)
+static  octave::application*   octave_app = NULL;
+static  octave::interpreter*   octave_interpreter = NULL;
+#endif
 
 void OcaOctaveHost::initialize()
 {
@@ -2359,17 +2393,45 @@ void OcaOctaveHost::initialize()
     octave_env::putenv( "OCTAVE_VERSION_INITFILE", OCA_STR( QDir::toNativeSeparators( octaudiorc ) ) );
   }
 
+  setlocale( LC_NUMERIC, "C" );
+  setlocale( LC_TIME, "C" );
+  octave_env::putenv( "LC_NUMERIC", "C" );
+  octave_env::putenv( "LC_TIME", "C" );
+
+  // It seems like Octave guys decided to make incompatible changes in the embedding API every release
+#if CHECK_OCTAVE_VERSION(4,4)
+  octave::cmdline_options opts;
+  opts.forced_interactive(false);
+  opts.forced_line_editing(true);
+  opts.read_history_file(false);
+  opts.inhibit_startup_message(true);
+  // just a hack as I haven't found any better way yet
+  opts.code_to_eval("1;");
+
+  octave_app = new octave::cli_application(opts);
+  octave_interpreter = new octave::interpreter(octave_app);
+
+  octave_interpreter->initialize_history(false);
+  octave_interpreter->initialize_load_path(true);
+  octave_interpreter->read_site_files(true);
+  octave_interpreter->read_init_files(true);
+  octave_interpreter->interactive(false);
+  octave_interpreter->initialize();
+#elif CHECK_OCTAVE_VERSION(4,2)
+  octave::cmdline_options opts;
+  opts.forced_interactive(false);
+  opts.forced_line_editing(true);
+  opts.read_history_file(false);
+  opts.inhibit_startup_message(true);
+  octave_app = new octave::embedded_application(opts);
+#else
   octave_exit = NULL;
   string_vector oct_argv(4);
   oct_argv(0) = "embedded";
   oct_argv(1) = "-q";
   oct_argv(2) = "--line-editing";
   oct_argv(3) = "--no-history";
-
-  setlocale( LC_NUMERIC, "C" );
-  setlocale( LC_TIME, "C" );
-  octave_env::putenv( "LC_NUMERIC", "C" );
-  octave_env::putenv( "LC_TIME", "C" );
+#endif
 
   INSTALL_OCA_BUILTIN( track_add );
   INSTALL_OCA_BUILTIN( track_remove );
@@ -2451,14 +2513,31 @@ void OcaOctaveHost::initialize()
     info->assign( "build_revision", OCA_BUILD_REVISION );
   }
 
+#if CHECK_OCTAVE_VERSION(4,4)
+  octave_interpreter->execute();
+#elif CHECK_OCTAVE_VERSION(4,2)
+  octave_app->execute();
+#else
   octave_main( 4, oct_argv.c_str_vec(), 1 );
+#endif
 }
 
 // ----------------------------------------------------------------------------
 
 void OcaOctaveHost::shutdown() {
+#if ! CHECK_OCTAVE_VERSION(4,2)
   quitting_gracefully = true;
   clean_up_and_exit( 0 );
+#else
+  if (NULL != octave_interpreter) {
+    delete octave_interpreter;
+    octave_interpreter = NULL;
+  }
+  if (NULL != octave_app) {
+    delete octave_app;
+    octave_app = NULL;
+  }
+#endif
   fprintf( stderr, "OcaOctaveHost::shutdown - %d objects in context\n", s_context.size() );
 }
 
@@ -2501,6 +2580,7 @@ void OcaOctaveHost::removeObjectContext( OcaObject* obj )
 void OcaOctaveHost::userInterruptionHanler( int /* sig */ )
 {
  fprintf( stderr, "OcaOctaveHost::userInterruptionHanler %p\n", QThread::currentThread() );
+#if ! CHECK_OCTAVE_VERSION(4,2)
  //if (can_interrupt)
     {
       if (octave_interrupt_immediately)
@@ -2532,7 +2612,7 @@ void OcaOctaveHost::userInterruptionHanler( int /* sig */ )
           */
         }
    }
-
+#endif
 }
 
 //static
@@ -2622,11 +2702,12 @@ void OcaOctaveHost::processCommand()
     //recover_from_exception();
     emit commandFailed( "interrupted", 129 );
   }
-  catch( octave_execution_exception ) {
+  catch( octave_execution_exception& ) {
     //recover_from_exception();
     //emit commandFailed( "failed", 129 );
+    error_state = 129;
   }
-  catch( std::bad_alloc ) {
+  catch( std::bad_alloc& ) {
     //recover_from_exception();
     emit commandFailed( "memory exception", 129 );
   }
@@ -2648,7 +2729,7 @@ void OcaOctaveHost::processCommand()
     if( ! stack.is_empty() ) {
       msg += "\ncalled from:";
     }
-    for( int i = 0; i < stack.length(); i++ ) {
+    for( int i = 0; i < stack.numel(); i++ ) {
       octave_value file = stack(i).contents("file");
       octave_value name = stack(i).contents("name");
       msg += QString( "\n  %2 %3 at line %4 column %5" )
