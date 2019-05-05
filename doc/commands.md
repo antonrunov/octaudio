@@ -341,6 +341,61 @@ The subtrack has the most properties of the linked data track, and additionally:
 - "index", the subtrack index in its container (smart track or monitor)
 
 
+##### 3D plotting commands
+
+The operand object is a plot3d instance. Container is not specified.
+
+```
+  [ID, idx] = oca_plot3d_add( name )
+```
+Create plot3d.
+```
+  oca_plot3d_set( data, [id] )
+```
+Set plot data. `data` should be a matrix. The corresponding values will be displayed
+as a 3D surface.
+```
+  oca_plot3d_settexture( texture, [id] )
+```
+Set a texture to the existing data. `texture` should be a matrix of the same size as the data.
+Values are colors in RGB format (0xff0000 for red, etc.). Value `nan` allows the default coloring for
+the corresponding surface points.
+```
+  ret = oca_plot3d_remove( [idn] )
+```
+```
+  [IDn] = oca_plot3d_list()
+```
+```
+  count = oca_plot3d_count()
+```
+```
+  IDn = oca_plot3d_find( idn )
+```
+```
+  vals = oca_plot3d_getprop( [names], [idn] )
+  ret = oca_plot3d_setprop( name, val, [idn] )
+  ret = oca_plot3d_setprop( props, [idn] )
+```
+Plot3d specific properties are:
+- "x_len", the number of rows in the current data
+- "y_len", the number of columns in the current data
+- "x_origin", the x-coordinate of the first data value
+- "x_step", the distance between data points along the x axis
+- "y_origin", the y-coordinate of the first data value
+- "y_step", the distance between data points along the y axis
+- "x_pos", the x-coordinate of the center of displayed area
+- "x_scale", the scale of the displayed area
+- "y_pos", the y-coordinate of the center of displayed area
+- "y_scale", the scale of the displayed area
+- "z_min", the minimum displayed value
+- "z_scale", the vertical scale
+- "x_sel_pos" (read only), the x-coordinate of the selected point or `nan`
+- "y_sel_pos" (read only), the y-coordinate of the selected point or `nan`
+- "aspect_ratio", the aspect ratio
+- "horiz_ratio", the horizontal aspect ratio
+
+
 ##### Context commands
 
 These commands work with objects of any type, and accept only the unique ID as an object
@@ -360,7 +415,7 @@ Return the whole context for the object `ID` as a scalar structure.
 ```
   oca_context_set( ID, name, val )
 ```
-Set the conext field `name`.
+Set the context field `name`.
 
 ```
   oca_context_set( ID, context )

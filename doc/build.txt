@@ -9,6 +9,7 @@
   - Portaudio V19 - http://www.portaudio.com
   - libsamplerate - http://www.mega-nerd.com/SRC
   - marked (optional), for generating html docs - https://github.com/chjj/marked
+  - Qt5DataVisualization (optional), for 3D Plotting - http://download.qt.io/archive/qt
 
 - General Instructions
 
@@ -26,6 +27,42 @@
       make install
   - Please note that the installation step is required for working Octaudio setup.
     Otherwise Octaudio will not be able to find its startup script and some components.
+
+- Building 3D Plotting support
+
+  3D Plotting functions in Octaudio rely on Qt5DataVisualization module. For some reason
+  most Linux distributions don't include this module in their repos. Thus you need either
+  build an entire Qt library from sources, or build and install a Qt5DataVisualization
+  module separately. The module's sources can be downloaded from the Qt archive
+  (depending on the required version it will be a location like
+  http://download.qt.io/archive/qt/5.8/5.8.0/submodules/qtdatavis3d-opensource-src-5.8.0.tar.gz).
+  Or you can use Qt's git repositary https://code.qt.io/cgit/qt/qtdatavis3d.git and
+  checkout the corresponding branch. It seems like version 5.8 works fine with
+  most Qt5 versions starting with at least Qt-5.5. The later module's versions require
+  more recent Qt library versions.
+
+  - Building the module
+      qmake --qt=5 qtdatavis3d.pro
+      make
+      make install
+        or
+      make install INSTALL_ROOT=/alternative/installation/prefix
+
+    Without a prefix, the newly built Qt5DataVisualization module will be installed in the
+    Qt's standard location (typically /usr/lib/x86_64-linux-gnu), which might not be the
+    best place for manually built stuff. If you install the module in a non-standard
+    location, make sure there is a corresponding entry in the /etc/ld.so.conf.d/.
+
+  - Configuring Octaudio
+    If Qt5DataVisualization is installed in the standard Qt location, cmake should find
+    it automatically and configure the build appropriately.
+
+    Otherwise you have to manually set the Qt5DataVisualization_DIR variable to the
+    directory containing Qt5DataVisualizationConfig.cmake (it should be
+    /your/prefix/usr/lib/x86_64-linux-gnu/cmake/Qt5DataVisualization).
+
+    If cmake is unable to find the Qt5DataVisualization module, it will print a warning
+    "Qt5::DataVisualization not found".
 
 - Building for MS Windows
 

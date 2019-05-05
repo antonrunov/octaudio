@@ -37,6 +37,7 @@ one can use the existing octave or matlab code directly in Octaudio.
 - Standard audio mixing options: mute, solo, gain, stereo pan.
 - Tracks can be marked as non-audible to be completely ignored during playback (useful
   for average values, control signals, etc.).
+- 3D plotting based on Qt5DataVisualization.
 
 ##### More Resources
 
