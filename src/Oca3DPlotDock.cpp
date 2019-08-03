@@ -192,6 +192,7 @@ void Oca3DPlotDock::onUpdateRequired( uint flags )
 
 void Oca3DPlotDock::updateData()
 {
+  OcaLock lock( m_plot );
   double* pd = m_plot->getData();
   QColor* p = m_plot->getTexture();
   if (NULL == pd) {
@@ -205,8 +206,12 @@ void Oca3DPlotDock::updateData()
   int nx = m_plot->getXLen();
   int ny = m_plot->getYLen();
 
+  m_xScrollBar->blockSignals(true);
+  m_yScrollBar->blockSignals(true);
   m_xScrollBar->setRange(0,nx);
   m_yScrollBar->setRange(0,ny);
+  m_xScrollBar->blockSignals(false);
+  m_yScrollBar->blockSignals(false);
 
   QImage img(nx, ny, QImage::Format_ARGB32_Premultiplied);
   QSurfaceDataArray *data = new QSurfaceDataArray;
